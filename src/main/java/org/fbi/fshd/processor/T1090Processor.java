@@ -2,20 +2,17 @@ package org.fbi.fshd.processor;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.fbi.fshd.domain.cbs.T1010Request.CbsTia1010;
-import org.fbi.fshd.domain.tps.T1010Request.TpsTia1010;
-import org.fbi.fshd.domain.tps.T1010Response.TpsToa1010;
+import org.fbi.fshd.domain.cbs.T1090Request.CbsTia1090;
+import org.fbi.fshd.domain.tps.T1090Request.TpsTia1090;
+import org.fbi.fshd.domain.tps.T1090Response.TpsToa1090;
 import org.fbi.fshd.enums.BillStatus;
 import org.fbi.fshd.enums.TxnRtnCode;
 import org.fbi.fshd.helper.FbiBeanUtils;
 import org.fbi.fshd.helper.MybatisFactory;
 import org.fbi.fshd.helper.ProjectConfigManager;
 import org.fbi.fshd.repository.dao.FsHdPaymentInfoMapper;
-import org.fbi.fshd.repository.dao.FsHdPaymentItemMapper;
 import org.fbi.fshd.repository.model.FsHdPaymentInfo;
 import org.fbi.fshd.repository.model.FsHdPaymentInfoExample;
-import org.fbi.fshd.repository.model.FsHdPaymentItem;
-import org.fbi.fshd.repository.model.FsHdPaymentItemExample;
 import org.fbi.linking.codec.dataformat.FixedLengthTextDataFormat;
 import org.fbi.linking.codec.dataformat.SeperatedTextDataFormat;
 import org.fbi.linking.processor.ProcessorException;
@@ -34,14 +31,14 @@ import java.util.Map;
 
 /**
  * Created by zhanrui on 14-1-20.
- * 机打票缴款确认交易
+ * 机打票冲正交易
  */
 public class T1090Processor extends AbstractTxnProcessor {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     protected void doRequest(Stdp10ProcessorRequest request, Stdp10ProcessorResponse response) throws ProcessorException, IOException {
-        CbsTia1010 cbsTia;
+        CbsTia1090 cbsTia;
         try {
             cbsTia = unmarshalCbsRequestMsg(request.getRequestBody());
         } catch (Exception e) {
@@ -51,37 +48,28 @@ public class T1090Processor extends AbstractTxnProcessor {
         }
 
         //检查本地数据库信息
-        FsHdPaymentInfo paymentInfo_db = selectNotCanceledPaymentInfoFromDB(cbsTia.getBillId());
+        FsHdPaymentInfo paymentInfo_db = selectPayoffPaymentInfoFromDB(cbsTia.getBillId());
         if (paymentInfo_db == null) {
-            marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "请先做查询交易.", response);
+            marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "不存在已缴款的记录.", response);
             return;
-        } else {
-            String billStatus = paymentInfo_db.getLnkBillStatus();
-            if (billStatus.equals(BillStatus.PAYOFF.getCode())) { //已缴款
-                marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
-                logger.info("===此笔缴款单已缴款.");
-                return;
-            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
-                marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "此笔缴款单状态错误", response);
-                logger.info("===此笔缴款单状态错误.");
-                return;
-            }
         }
 
         //第三方通讯处理
-        TpsTia1010 tpsTia = new TpsTia1010();
-        TpsToa1010 tpsToa;
+        TpsTia1090 tpsTia = new TpsTia1090();
+        TpsToa1090 tpsToa;
 
         try {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
-            tpsTia.setTxnHdlCode("2");   //处理码 内容：1—表示请求验证
-            tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));
+            tpsTia.setTxnHdlCode("4");   //处理码 内容:4—表示红冲信息
+            tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));  //财政专户账号
             //tpsTia.setVoucherType("01");     //通知书类型
             tpsTia.setFisBatchSn("000001");   //批次号码信息
             tpsTia.setOutModeFlag("O"); //输出模式标识
             tpsTia.setBranchId(request.getHeader("branchId"));
             tpsTia.setTlrId(request.getHeader("tellerId"));
-            byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "1010");
+            tpsTia.setInstCode(paymentInfo_db.getInstCode());    //单位代码
+
+            byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "1090");
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);
         } catch (SocketTimeoutException e) {
             logger.error("与第三方服务器通讯处理超时.", e);
@@ -96,7 +84,7 @@ public class T1090Processor extends AbstractTxnProcessor {
         //特色平台响应
         if ("0".equals(tpsToa.getRtnCode())) { //交易成功
             try {
-                processTxn(cbsTia, paymentInfo_db, request);
+                processTxn(paymentInfo_db, request);
                 marshalSuccessTxnCbsResponse(response);
             } catch (Exception e) {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, e.getMessage(), response);
@@ -109,15 +97,15 @@ public class T1090Processor extends AbstractTxnProcessor {
     }
 
     //解包生成CBS请求报文BEAN
-    private CbsTia1010 unmarshalCbsRequestMsg(byte[] body) throws Exception {
-        CbsTia1010 tia = new CbsTia1010();
+    private CbsTia1090 unmarshalCbsRequestMsg(byte[] body) throws Exception {
+        CbsTia1090 tia = new CbsTia1090();
         SeperatedTextDataFormat dataFormat = new SeperatedTextDataFormat(tia.getClass().getPackage().getName());
-        tia = (CbsTia1010) dataFormat.fromMessage(new String(body, "GBK"), "CbsTia1010");
+        tia = (CbsTia1090) dataFormat.fromMessage(new String(body, "GBK"), "CbsTia1090");
         return tia;
     }
 
     //组第三方服务器请求报文
-    private byte[] marshalTpsRequestMsg(TpsTia1010 tpsTia) {
+    private byte[] marshalTpsRequestMsg(TpsTia1090 tpsTia) {
         Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
         modelObjectsMap.put(tpsTia.getClass().getName(), tpsTia);
         FixedLengthTextDataFormat dataFormat = new FixedLengthTextDataFormat(tpsTia.getClass().getPackage().getName());
@@ -133,18 +121,18 @@ public class T1090Processor extends AbstractTxnProcessor {
     }
 
     //解包生成第三方响应报文BEAN
-    private TpsToa1010 unmarshalTpsResponseMsg(byte[] response) throws Exception {
-        TpsToa1010 toa = new TpsToa1010();
+    private TpsToa1090 unmarshalTpsResponseMsg(byte[] response) throws Exception {
+        TpsToa1090 toa = new TpsToa1090();
         FixedLengthTextDataFormat dataFormat = new FixedLengthTextDataFormat(toa.getClass().getPackage().getName());
-        toa = (TpsToa1010) dataFormat.fromMessage(response, "TpsToa1010");
+        toa = (TpsToa1090) dataFormat.fromMessage(response, "TpsToa1090");
 
         return toa;
     }
 
 
     //=======数据库处理=================================================
-    //查找未撤销的缴款单记录
-    private FsHdPaymentInfo selectNotCanceledPaymentInfoFromDB(String billId) {
+    //查找已缴款未撤销的缴款单记录
+    private FsHdPaymentInfo selectPayoffPaymentInfoFromDB(String billId) {
         SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
         FsHdPaymentInfoMapper mapper;
         try (SqlSession session = sqlSessionFactory.openSession()) {
@@ -152,50 +140,34 @@ public class T1090Processor extends AbstractTxnProcessor {
             FsHdPaymentInfoExample example = new FsHdPaymentInfoExample();
             example.createCriteria()
                     .andBillIdEqualTo(billId)
-                    .andLnkBillStatusNotEqualTo(BillStatus.CANCELED.getCode());
+                    .andLnkBillStatusEqualTo(BillStatus.PAYOFF.getCode());
             List<FsHdPaymentInfo> infos = mapper.selectByExample(example);
             if (infos.size() == 0) {
                 return null;
             }
-            if (infos.size() != 1) { //同一个缴款单号，未撤销的在表中只能存在一条记录
+            if (infos.size() != 1) { //同一个缴款单号，已缴款未撤销的在表中只能存在一条记录
                 throw new RuntimeException("记录状态错误.");
             }
             return infos.get(0);
         }
     }
 
-    private List<FsHdPaymentItem> selectPaymentItemsFromDB(FsHdPaymentInfo paymentInfo) {
-        SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
-        try (SqlSession session = sqlSessionFactory.openSession()) {
-            FsHdPaymentItemExample example = new FsHdPaymentItemExample();
-            example.createCriteria().andMainPkidEqualTo(paymentInfo.getPkid());
-            FsHdPaymentItemMapper infoMapper = session.getMapper(FsHdPaymentItemMapper.class);
-            return infoMapper.selectByExample(example);
-        }
-    }
-
-
-    private void processTxn(CbsTia1010 cbsTia, FsHdPaymentInfo paymentInfo, Stdp10ProcessorRequest request) {
+    private void processTxn(FsHdPaymentInfo paymentInfo, Stdp10ProcessorRequest request) {
         SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
         SqlSession session = sqlSessionFactory.openSession();
         try {
-            //缴款相关信息由特色系统请求报文中提供
-            paymentInfo.setVoucherType(cbsTia.getVoucherType());
-            paymentInfo.setPayAmt(cbsTia.getPayAmt());
+            Date date = new SimpleDateFormat("yyyyMMddHHmmss").parse(request.getHeader("txnTime"));
+            paymentInfo.setCanceldate(new SimpleDateFormat("yyyyMMdd").format(date));
 
-            paymentInfo.setOperPayBankid(request.getHeader("branchId"));
-            paymentInfo.setOperPayTlrid(request.getHeader("tellerId"));
-            paymentInfo.setOperPayDate(new SimpleDateFormat("yyyyMMdd").format(new Date()));
-            paymentInfo.setOperPayTime(new SimpleDateFormat("HHmmss").format(new Date()));
-            paymentInfo.setOperPayHostsn(request.getHeader("serialNo"));
+            paymentInfo.setOperCancelBankid(request.getHeader("branchId"));
+            paymentInfo.setOperCancelTlrid(request.getHeader("tellerId"));
+            paymentInfo.setOperCancelDate(new SimpleDateFormat("yyyyMMdd").format(new Date()));
+            paymentInfo.setOperCancelTime(new SimpleDateFormat("HHmmss").format(new Date()));
+            paymentInfo.setOperCancelHostsn(request.getHeader("serialNo"));
 
-            paymentInfo.setHostBookFlag("1");
-            paymentInfo.setHostChkFlag("0");
-            paymentInfo.setFbBookFlag("1");
-            paymentInfo.setFbChkFlag("0");
+            paymentInfo.setLnkBillStatus(BillStatus.CANCELED.getCode()); //已撤销
+            paymentInfo.setOperCancelHostsn(request.getHeader("serialNo")); //记录撤销交易的主机流水号
 
-            paymentInfo.setHostAckFlag("0");
-            paymentInfo.setLnkBillStatus(BillStatus.PAYOFF.getCode()); //已缴款
             FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
             infoMapper.updateByPrimaryKey(paymentInfo);
             session.commit();

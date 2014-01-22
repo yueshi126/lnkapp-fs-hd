@@ -2,9 +2,9 @@ package org.fbi.fshd.processor;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.fbi.fshd.domain.cbs.T1090Request.CbsTia1090;
-import org.fbi.fshd.domain.tps.T1090Request.TpsTia1090;
-import org.fbi.fshd.domain.tps.T1090Response.TpsToa1090;
+import org.fbi.fshd.domain.cbs.T2090Request.CbsTia2090;
+import org.fbi.fshd.domain.tps.T2090Request.TpsTia2090;
+import org.fbi.fshd.domain.tps.T2090Response.TpsToa2090;
 import org.fbi.fshd.enums.BillStatus;
 import org.fbi.fshd.enums.TxnRtnCode;
 import org.fbi.fshd.helper.FbiBeanUtils;
@@ -31,14 +31,14 @@ import java.util.Map;
 
 /**
  * Created by zhanrui on 14-1-20.
- * 机打票冲正交易
+ * 手工票冲正交易
  */
 public class T2090Processor extends AbstractTxnProcessor {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     protected void doRequest(Stdp10ProcessorRequest request, Stdp10ProcessorResponse response) throws ProcessorException, IOException {
-        CbsTia1090 cbsTia;
+        CbsTia2090 cbsTia;
         try {
             cbsTia = unmarshalCbsRequestMsg(request.getRequestBody());
         } catch (Exception e) {
@@ -48,28 +48,26 @@ public class T2090Processor extends AbstractTxnProcessor {
         }
 
         //检查本地数据库信息
-        FsHdPaymentInfo paymentInfo_db = selectPayoffPaymentInfoFromDB(cbsTia.getBillId());
+        FsHdPaymentInfo paymentInfo_db = selectPayoffPaymentInfoFromDB(cbsTia.getFisBizId());
         if (paymentInfo_db == null) {
             marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "不存在已缴款的记录.", response);
             return;
         }
 
         //第三方通讯处理
-        TpsTia1090 tpsTia = new TpsTia1090();
-        TpsToa1090 tpsToa;
+        TpsTia2090 tpsTia = new TpsTia2090();
+        TpsToa2090 tpsToa;
 
         try {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
-            tpsTia.setTxnHdlCode("2");   //处理码 内容：1—表示请求验证
+            tpsTia.setTxnHdlCode("4");   //处理码 内容：4—表示红冲信息
             tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));  //财政专户账号
             //tpsTia.setVoucherType("01");     //通知书类型
-            tpsTia.setFisBatchSn("000001");   //批次号码信息
-            tpsTia.setOutModeFlag("O"); //输出模式标识
             tpsTia.setBranchId(request.getHeader("branchId"));
             tpsTia.setTlrId(request.getHeader("tellerId"));
             tpsTia.setInstCode(paymentInfo_db.getInstCode());    //单位代码
 
-            byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "1090");
+            byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "2090");
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);
         } catch (SocketTimeoutException e) {
             logger.error("与第三方服务器通讯处理超时.", e);
@@ -97,15 +95,15 @@ public class T2090Processor extends AbstractTxnProcessor {
     }
 
     //解包生成CBS请求报文BEAN
-    private CbsTia1090 unmarshalCbsRequestMsg(byte[] body) throws Exception {
-        CbsTia1090 tia = new CbsTia1090();
+    private CbsTia2090 unmarshalCbsRequestMsg(byte[] body) throws Exception {
+        CbsTia2090 tia = new CbsTia2090();
         SeperatedTextDataFormat dataFormat = new SeperatedTextDataFormat(tia.getClass().getPackage().getName());
-        tia = (CbsTia1090) dataFormat.fromMessage(new String(body, "GBK"), "CbsTia1090");
+        tia = (CbsTia2090) dataFormat.fromMessage(new String(body, "GBK"), "CbsTia2090");
         return tia;
     }
 
     //组第三方服务器请求报文
-    private byte[] marshalTpsRequestMsg(TpsTia1090 tpsTia) {
+    private byte[] marshalTpsRequestMsg(TpsTia2090 tpsTia) {
         Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
         modelObjectsMap.put(tpsTia.getClass().getName(), tpsTia);
         FixedLengthTextDataFormat dataFormat = new FixedLengthTextDataFormat(tpsTia.getClass().getPackage().getName());
@@ -121,10 +119,10 @@ public class T2090Processor extends AbstractTxnProcessor {
     }
 
     //解包生成第三方响应报文BEAN
-    private TpsToa1090 unmarshalTpsResponseMsg(byte[] response) throws Exception {
-        TpsToa1090 toa = new TpsToa1090();
+    private TpsToa2090 unmarshalTpsResponseMsg(byte[] response) throws Exception {
+        TpsToa2090 toa = new TpsToa2090();
         FixedLengthTextDataFormat dataFormat = new FixedLengthTextDataFormat(toa.getClass().getPackage().getName());
-        toa = (TpsToa1090) dataFormat.fromMessage(response, "TpsToa1090");
+        toa = (TpsToa2090) dataFormat.fromMessage(response, "TpsToa2090");
 
         return toa;
     }
@@ -132,14 +130,14 @@ public class T2090Processor extends AbstractTxnProcessor {
 
     //=======数据库处理=================================================
     //查找已缴款未撤销的缴款单记录
-    private FsHdPaymentInfo selectPayoffPaymentInfoFromDB(String billId) {
+    private FsHdPaymentInfo selectPayoffPaymentInfoFromDB(String fisBizId) {
         SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
         FsHdPaymentInfoMapper mapper;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             mapper = session.getMapper(FsHdPaymentInfoMapper.class);
             FsHdPaymentInfoExample example = new FsHdPaymentInfoExample();
             example.createCriteria()
-                    .andBillIdEqualTo(billId)
+                    .andFisBizIdEqualTo(fisBizId)
                     .andLnkBillStatusEqualTo(BillStatus.PAYOFF.getCode());
             List<FsHdPaymentInfo> infos = mapper.selectByExample(example);
             if (infos.size() == 0) {

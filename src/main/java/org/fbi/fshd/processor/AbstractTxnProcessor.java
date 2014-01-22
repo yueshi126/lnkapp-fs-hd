@@ -1,14 +1,11 @@
 package org.fbi.fshd.processor;
 
 import org.apache.commons.lang.StringUtils;
-import org.fbi.fskfq.domain.cbs.T9999Response.TOA9999;
-import org.fbi.fskfq.domain.tps.base.TpsTia;
-import org.fbi.fskfq.domain.tps.base.TpsToaXmlBean;
-import org.fbi.fskfq.domain.tps.txn.TpsToa9910;
-import org.fbi.fskfq.enums.TxnRtnCode;
-import org.fbi.fskfq.helper.ProjectConfigManager;
-import org.fbi.fskfq.helper.TpsSocketClient;
-import org.fbi.fskfq.internal.AppActivator;
+import org.fbi.fshd.domain.cbs.T9999Response.TOA9999;
+import org.fbi.fshd.enums.TxnRtnCode;
+import org.fbi.fshd.helper.ProjectConfigManager;
+import org.fbi.fshd.helper.TpsSocketClient;
+import org.fbi.fshd.internal.AppActivator;
 import org.fbi.linking.codec.dataformat.SeperatedTextDataFormat;
 import org.fbi.linking.processor.ProcessorException;
 import org.fbi.linking.processor.standprotocol10.Stdp10Processor;
@@ -22,16 +19,13 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 /**
  * User: zhanrui
- * Date: 13-12-18
- * Time: 下午6:16
+ * Date: 2014-1-18
  */
 public abstract class AbstractTxnProcessor extends Stdp10Processor {
     protected static String CONTEXT_TPS_AUTHCODE = "CONTEXT_TPS_AUTHCODE";
@@ -51,9 +45,9 @@ public abstract class AbstractTxnProcessor extends Stdp10Processor {
         try {
             MDC.put("txnCode", txnCode);
             MDC.put("tellerId", tellerId);
-            logger.info("特色平台请求报文:" + request.toString());
+            logger.info("CBS Request:" + request.toString());
             doRequest(request, response);
-            logger.info("特色平台响应报文:" + response.toString());
+            logger.info("CBS Response:" + response.toString());
         }catch (Exception e){
             response.setHeader("rtnCode", TxnRtnCode.TXN_EXECUTE_FAILED.getCode());
             throw new RuntimeException(e);
@@ -106,7 +100,7 @@ public abstract class AbstractTxnProcessor extends Stdp10Processor {
     }
 
     //根据第三方服务器的返回码从配置文件中获取对应的信息
-    private String getRtnMsg(String rtnCode) {
+    protected String getTpsRtnErrorMsg(String rtnCode) {
         BundleContext bundleContext = AppActivator.getBundleContext();
         URL url = bundleContext.getBundle().getEntry("rtncode.properties");
 
@@ -123,56 +117,18 @@ public abstract class AbstractTxnProcessor extends Stdp10Processor {
         return property;
     }
 
-    //生成第三方服务器通讯报文头
-    protected byte[] generateTpsTxMsgHeader(TpsTia tpstia, Stdp10ProcessorRequest request) throws UnsupportedEncodingException {
-        String isSign = "0";
-
-        String authCode = (String)request.getProcessorContext().getAttribute(CONTEXT_TPS_AUTHCODE);
-        if (StringUtils.isEmpty(authCode)) {
-            authCode = ProjectConfigManager.getInstance().getProperty("authCode");
+    //第三方服务器通讯报文头的长度处理
+    protected String generateTpsRequestHeader(String sendMsg) throws UnsupportedEncodingException {
+        String lenField = "" + (sendMsg.getBytes(TPS_ENCODING).length + 4);
+        String lpad = "";
+        for (int i = 0; i < 3 - lenField.length(); i++) {
+            lpad += "0";
         }
-
-        //String authCode = this.tps_authcode;
-        if (StringUtils.isEmpty(authCode)) {
-            authCode = ProjectConfigManager.getInstance().getProperty("authCode");
-        }
-        String authLen = "" + authCode.length();
-        String reserve = "               ";
-
-        String sendTime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-
-        // 报文文档中的数据类型为交易码
-        String msg = StringUtils.leftPad(tpstia.getHeader().getDataType(), 6, " ")
-                + StringUtils.leftPad(tpstia.getHeader().getSrc(), 15, " ")
-                + StringUtils.leftPad(tpstia.getHeader().getDes(), 15, " ")
-                + sendTime
-                + isSign
-                + StringUtils.leftPad(authLen, 3, "0")
-                + reserve
-                + authCode
-                + tpstia.toString();
-
-        int msglength = msg.getBytes("GBK").length + 8;
-        String len = StringUtils.leftPad("" + msglength, 8, "0");
-
-        byte[] buffer = new byte[msglength];
-        System.arraycopy(len.getBytes(), 0, buffer, 0, 8);
-        System.arraycopy(msg.getBytes("GBK"), 0, buffer, 8, msglength - 8);
-
-        return buffer;
+        lenField = lpad + lenField;
+        sendMsg = "0" + lenField + sendMsg;
+        return sendMsg;
     }
 
-    //生成第三方服务器业务报文头
-    protected void generateTpsBizMsgHeader(TpsTia tpstia, String dataType, Stdp10ProcessorRequest request) {
-        //处理报文头 TODO 确认msgId的出处
-        tpstia.getHeader().setMsgId(request.getHeader("txnTime") + request.getHeader("serialNo"));
-        tpstia.getHeader().setMsgRef(request.getHeader("serialNo"));
-        tpstia.getHeader().setWorkDate(request.getHeader("txnTime").substring(0, 8));
-
-        tpstia.getHeader().setSrc(ProjectConfigManager.getInstance().getProperty("tps.txn.login.src"));
-        tpstia.getHeader().setDes(ProjectConfigManager.getInstance().getProperty("tps.txn.login.des"));
-        tpstia.getHeader().setDataType(dataType);
-    }
 
 
     //第三方服务处理：可根据交易号设置不同的超时时间
@@ -193,41 +149,10 @@ public abstract class AbstractTxnProcessor extends Stdp10Processor {
             }
         }
 
-        logger.info("第三方服务器请求报文:" + new String(sendTpsBuf, TPS_ENCODING));
+        logger.info("TPS Request:" + new String(sendTpsBuf, TPS_ENCODING));
         byte[] rcvTpsBuf = client.call(sendTpsBuf);
-        logger.info("第三方服务器响应报文:" + new String(rcvTpsBuf, TPS_ENCODING));
+        logger.info("TPS Response:" + new String(rcvTpsBuf, TPS_ENCODING));
         return rcvTpsBuf;
     }
 
-    //一般技术性异常报文处理 9910
-    protected TpsToa9910 transXmlToBeanForTps9910(byte[] buf) {
-        int authLen = Integer.parseInt(new String(buf, 51, 3));
-        String msgdata = new String(buf, 69 + authLen, buf.length - 69 - authLen);
-        System.out.println("===XML报文体：\n" + msgdata);
-
-
-        TpsToa9910 toa = new TpsToa9910();
-        return (TpsToa9910) toa.toToa(msgdata);
-    }
-
-    protected TpsToaXmlBean transXmlToBeanForTps(byte[] buf) {
-        String txnCode = new String(buf, 0, 6).trim();
-        int authLen = Integer.parseInt(new String(buf, 51, 3));
-        String msgdata = new String(buf, 69 + authLen, buf.length - 69 - authLen);
-
-        System.out.println("===XML报文体：\n" + msgdata);
-
-        TpsToaXmlBean toa = new TpsToaXmlBean();
-        toa = (TpsToaXmlBean) toa.toToa(msgdata);
-        return toa;
-    }
-
-    protected String substr(String content, String startStr, String endStr) {
-        int length = startStr.length();
-        int start = content.indexOf(startStr) + length;
-        int end = content.indexOf(endStr);
-        return content.substring(start, end);
-    }
-
-    //======================
 }

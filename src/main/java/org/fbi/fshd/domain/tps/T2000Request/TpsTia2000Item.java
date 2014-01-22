@@ -55,7 +55,7 @@ public class TpsTia2000Item {
 
     @Override
     public String toString() {
-        return "TpsToa1000Item{" +
+        return "TpsTia2000Item{" +
                 "prjCode='" + prjCode + '\'' +
                 ", measure='" + measure + '\'' +
                 ", handleNum='" + handleNum + '\'' +

@@ -17,19 +17,13 @@ public class TpsTia2090 {
     private String branchId;             //网点代码
     @DataField(seq = 5, length = 5)
     private String tlrId;                //操作员代码
-    @DataField(seq = 6, length = 7)
-    private String instCode;                //单位代码
-    @DataField(seq = 7, length = 2)
-    private String billType;              //通知书类别 0:一般通知书；1：土地出让金类通知书；（出让金通知书参数启用，暂时没有）
-    @DataField(seq = 8, length = 6)
-    private String fisBatchSn;            //批次号码信息
-    @DataField(seq = 9, length = 12)
-    private String billId;                //缴款通知书号
-    @DataField(seq = 10, length = 12)
-    private BigDecimal payAmt;                 //总金额
-    @DataField(seq = 11, length = 1)
-    private String outModeFlag;           //输出模式标识
 
+    @DataField(seq = 6, length = 10)
+    private String fisBizId;             //财政业务ID号    财政流水号?
+    @DataField(seq = 7, length = 7)
+    private String instCode;                //单位代码
+    @DataField(seq = 8, length = 12)
+    private BigDecimal payAmt;                 //总金额
 
     public String getFisCode() {
         return fisCode;
@@ -47,44 +41,12 @@ public class TpsTia2090 {
         this.txnHdlCode = txnHdlCode;
     }
 
-    public String getBillType() {
-        return billType;
-    }
-
-    public void setBillType(String billType) {
-        this.billType = billType;
-    }
-
-    public String getFisBatchSn() {
-        return fisBatchSn;
-    }
-
-    public void setFisBatchSn(String fisBatchSn) {
-        this.fisBatchSn = fisBatchSn;
-    }
-
-    public String getBillId() {
-        return billId;
-    }
-
-    public void setBillId(String billId) {
-        this.billId = billId;
-    }
-
     public String getFisActno() {
         return fisActno;
     }
 
     public void setFisActno(String fisActno) {
         this.fisActno = fisActno;
-    }
-
-    public String getOutModeFlag() {
-        return outModeFlag;
-    }
-
-    public void setOutModeFlag(String outModeFlag) {
-        this.outModeFlag = outModeFlag;
     }
 
     public String getBranchId() {
@@ -101,6 +63,14 @@ public class TpsTia2090 {
 
     public void setTlrId(String tlrId) {
         this.tlrId = tlrId;
+    }
+
+    public String getFisBizId() {
+        return fisBizId;
+    }
+
+    public void setFisBizId(String fisBizId) {
+        this.fisBizId = fisBizId;
     }
 
     public String getInstCode() {
@@ -121,18 +91,15 @@ public class TpsTia2090 {
 
     @Override
     public String toString() {
-        return "TpsTia1090{" +
+        return "TpsTia2090{" +
                 "fisCode='" + fisCode + '\'' +
                 ", txnHdlCode='" + txnHdlCode + '\'' +
                 ", fisActno='" + fisActno + '\'' +
                 ", branchId='" + branchId + '\'' +
                 ", tlrId='" + tlrId + '\'' +
+                ", fisBizId='" + fisBizId + '\'' +
                 ", instCode='" + instCode + '\'' +
-                ", billType='" + billType + '\'' +
-                ", fisBatchSn='" + fisBatchSn + '\'' +
-                ", billId='" + billId + '\'' +
                 ", payAmt=" + payAmt +
-                ", outModeFlag='" + outModeFlag + '\'' +
                 '}';
     }
 }

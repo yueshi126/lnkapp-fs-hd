@@ -59,7 +59,7 @@ public class TpsToa1090 {
 
     @Override
     public String toString() {
-        return "TpsToa1010{" +
+        return "TpsToa1090{" +
                 "fisCode='" + fisCode + '\'' +
                 ", txnHdlCode='" + txnHdlCode + '\'' +
                 ", rtnCode='" + rtnCode + '\'' +

@@ -1,6 +1,5 @@
 package org.fbi.fshd.domain.tps.T2000Request;
 
-import org.fbi.fshd.domain.tps.T1000Response.TpsToa1000Item;
 import org.fbi.linking.codec.dataformat.annotation.DataField;
 import org.fbi.linking.codec.dataformat.annotation.FixedLengthTextMessage;
 import org.fbi.linking.codec.dataformat.annotation.OneToMany;
@@ -13,42 +12,47 @@ public class TpsTia2000 {
     private String fisCode;               //财政局编码 4
     @DataField(seq = 2, length = 1)
     private String txnHdlCode;            //交易处理码
-    @DataField(seq = 3, length = 1)
-    private String rtnCode;               //验证码
-    @DataField(seq = 4, length = 25)
+    @DataField(seq = 3, length = 25)
     private String fisActno;              //财政专户帐号
-    @DataField(seq = 5, length = 12)
+    @DataField(seq = 4, length = 10)
+    private String branchId;             //网点代码
+    @DataField(seq = 5, length = 5)
+    private String tlrId;                //操作员代码
+    @DataField(seq = 6, length = 6)
+    private String fisBatchSn;            //批次号码信息
+    @DataField(seq = 7, length = 12)
     private String billId;                //缴款通知书号
-    @DataField(seq = 6, length = 7)
+    @DataField(seq = 8, length = 7)
     private String instCode;              //单位代码
-    @DataField(seq = 7, length = 30)
+    @DataField(seq = 9, length = 30)
     private String payerName;              //缴款人
 
-    @DataField(seq = 8, length = 1)
+    @DataField(seq = 10, length = 1)
     private String itemNum;
-    @DataField(seq = 9, length = 30)
-    @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T1000Response.TpsToa1000Item", totalNumberField = "itemNum")
-    private List<TpsToa1000Item> items;
+    @DataField(seq = 11, length = 30)
+    @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T2000Response.TpsTia2000Item", totalNumberField = "itemNum")
+    private List<TpsTia2000Item> items;
 
-    @DataField(seq = 10, length = 8)
+    @DataField(seq = 12, length = 8)
     private String notifyDate;              //通知日期
-    @DataField(seq = 11, length = 8)
+    @DataField(seq = 13, length = 8)
     private String latestDate;              //最迟日期
-    @DataField(seq = 12, length = 3)
-    private String overdueRatio;            //滞纳金比例
-    @DataField(seq = 13, length = 12)
-    private String overdueAmt;              //滞纳金金额
     @DataField(seq = 14, length = 5)
     private String verifyNo;                //校验码
-/*
-    @DataField(seq = 15, length = 30)
-    private String payerActno;              //缴款人账号
-    @DataField(seq = 16, length = 60)
-    private String payerBank;               //缴款人开户银行
-*/
-    @DataField(seq = 15, length = 1)
-    private String outModeFlag;           //输出模式标识
-
+    /*
+        @DataField(seq = 15, length = 30)
+        private String payerActno;              //缴款人账号
+        @DataField(seq = 16, length = 60)
+        private String payerBank;               //缴款人开户银行
+    */
+    @DataField(seq = 15, length = 250)
+    private String remark;                  //备注
+    @DataField(seq = 16, length = 2)
+    private String voucherType;             //票据类型
+    @DataField(seq = 17, length = 1)
+    private String billType;                //通知书类别
+    @DataField(seq = 18, length = 1)
+    private String outModeFlag;            //输出模式标识
 
     public String getFisCode() {
         return fisCode;
@@ -66,20 +70,36 @@ public class TpsTia2000 {
         this.txnHdlCode = txnHdlCode;
     }
 
-    public String getRtnCode() {
-        return rtnCode;
-    }
-
-    public void setRtnCode(String rtnCode) {
-        this.rtnCode = rtnCode;
-    }
-
     public String getFisActno() {
         return fisActno;
     }
 
     public void setFisActno(String fisActno) {
         this.fisActno = fisActno;
+    }
+
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
+    }
+
+    public String getTlrId() {
+        return tlrId;
+    }
+
+    public void setTlrId(String tlrId) {
+        this.tlrId = tlrId;
+    }
+
+    public String getFisBatchSn() {
+        return fisBatchSn;
+    }
+
+    public void setFisBatchSn(String fisBatchSn) {
+        this.fisBatchSn = fisBatchSn;
     }
 
     public String getBillId() {
@@ -114,11 +134,11 @@ public class TpsTia2000 {
         this.itemNum = itemNum;
     }
 
-    public List<TpsToa1000Item> getItems() {
+    public List<TpsTia2000Item> getItems() {
         return items;
     }
 
-    public void setItems(List<TpsToa1000Item> items) {
+    public void setItems(List<TpsTia2000Item> items) {
         this.items = items;
     }
 
@@ -138,22 +158,6 @@ public class TpsTia2000 {
         this.latestDate = latestDate;
     }
 
-    public String getOverdueRatio() {
-        return overdueRatio;
-    }
-
-    public void setOverdueRatio(String overdueRatio) {
-        this.overdueRatio = overdueRatio;
-    }
-
-    public String getOverdueAmt() {
-        return overdueAmt;
-    }
-
-    public void setOverdueAmt(String overdueAmt) {
-        this.overdueAmt = overdueAmt;
-    }
-
     public String getVerifyNo() {
         return verifyNo;
     }
@@ -162,23 +166,29 @@ public class TpsTia2000 {
         this.verifyNo = verifyNo;
     }
 
-/*
-    public String getPayerActno() {
-        return payerActno;
+    public String getRemark() {
+        return remark;
     }
 
-    public void setPayerActno(String payerActno) {
-        this.payerActno = payerActno;
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
-    public String getPayerBank() {
-        return payerBank;
+    public String getVoucherType() {
+        return voucherType;
     }
 
-    public void setPayerBank(String payerBank) {
-        this.payerBank = payerBank;
+    public void setVoucherType(String voucherType) {
+        this.voucherType = voucherType;
     }
-*/
+
+    public String getBillType() {
+        return billType;
+    }
+
+    public void setBillType(String billType) {
+        this.billType = billType;
+    }
 
     public String getOutModeFlag() {
         return outModeFlag;
@@ -190,11 +200,13 @@ public class TpsTia2000 {
 
     @Override
     public String toString() {
-        return "TpsToa1000{" +
+        return "TpsTia2000{" +
                 "fisCode='" + fisCode + '\'' +
                 ", txnHdlCode='" + txnHdlCode + '\'' +
-                ", rtnCode='" + rtnCode + '\'' +
                 ", fisActno='" + fisActno + '\'' +
+                ", branchId='" + branchId + '\'' +
+                ", tlrId='" + tlrId + '\'' +
+                ", fisBatchSn='" + fisBatchSn + '\'' +
                 ", billId='" + billId + '\'' +
                 ", instCode='" + instCode + '\'' +
                 ", payerName='" + payerName + '\'' +
@@ -202,11 +214,10 @@ public class TpsTia2000 {
                 ", items=" + items +
                 ", notifyDate='" + notifyDate + '\'' +
                 ", latestDate='" + latestDate + '\'' +
-                ", overdueRatio='" + overdueRatio + '\'' +
-                ", overdueAmt='" + overdueAmt + '\'' +
                 ", verifyNo='" + verifyNo + '\'' +
-//                ", payerActno='" + payerActno + '\'' +
-//                ", payerBank='" + payerBank + '\'' +
+                ", remark='" + remark + '\'' +
+                ", voucherType='" + voucherType + '\'' +
+                ", billType='" + billType + '\'' +
                 ", outModeFlag='" + outModeFlag + '\'' +
                 '}';
     }

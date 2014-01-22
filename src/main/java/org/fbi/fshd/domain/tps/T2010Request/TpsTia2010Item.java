@@ -4,33 +4,21 @@ package org.fbi.fshd.domain.tps.T2010Request;
 import org.fbi.linking.codec.dataformat.annotation.DataField;
 import org.fbi.linking.codec.dataformat.annotation.OneToManyFixedLengthTextMessage;
 
+import java.math.BigDecimal;
+
 /**
  * Created by zhanrui on 14-1-16.
  */
 @OneToManyFixedLengthTextMessage
 public class TpsTia2010Item {
-    @DataField(seq = 1, length = 30)
-    private String prjName;
-    @DataField(seq = 2, length = 1)
-    private String prjVerifyResult;
-    @DataField(seq = 3, length = 1)
+    @DataField(seq = 1, length = 1)
     private String vchClass;
-
-    public String getPrjName() {
-        return prjName;
-    }
-
-    public void setPrjName(String prjName) {
-        this.prjName = prjName;
-    }
-
-    public String getPrjVerifyResult() {
-        return prjVerifyResult;
-    }
-
-    public void setPrjVerifyResult(String prjVerifyResult) {
-        this.prjVerifyResult = prjVerifyResult;
-    }
+    @DataField(seq = 2, length = 8)
+    private String vchNum;
+    @DataField(seq = 3, length = 12)
+    private BigDecimal txnAmt;
+    @DataField(seq = 4, length = 1)
+    private String vchSts;
 
     public String getVchClass() {
         return vchClass;
@@ -40,12 +28,37 @@ public class TpsTia2010Item {
         this.vchClass = vchClass;
     }
 
+    public String getVchNum() {
+        return vchNum;
+    }
+
+    public void setVchNum(String vchNum) {
+        this.vchNum = vchNum;
+    }
+
+    public BigDecimal getTxnAmt() {
+        return txnAmt;
+    }
+
+    public void setTxnAmt(BigDecimal txnAmt) {
+        this.txnAmt = txnAmt;
+    }
+
+    public String getVchSts() {
+        return vchSts;
+    }
+
+    public void setVchSts(String vchSts) {
+        this.vchSts = vchSts;
+    }
+
     @Override
     public String toString() {
-        return "TpsToa2000Item{" +
-                "prjName='" + prjName + '\'' +
-                ", prjVerifyResult='" + prjVerifyResult + '\'' +
-                ", vchClass='" + vchClass + '\'' +
+        return "TpsTia2010Item{" +
+                "vchClass='" + vchClass + '\'' +
+                ", vchNum='" + vchNum + '\'' +
+                ", txnAmt=" + txnAmt +
+                ", vchSts='" + vchSts + '\'' +
                 '}';
     }
 }

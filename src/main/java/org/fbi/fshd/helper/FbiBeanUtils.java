@@ -96,7 +96,7 @@ public class FbiBeanUtils {
                             }
                             //类型不匹配则转换
                             if (!(targetProp.getPropertyType().getName().equals(value.getClass().getName()))) {
-                                value = parseByType(targetProp.getPropertyType(), value.toString());
+                                value = parseByType(targetProp.getPropertyType(), value);
                             }
 
                             writeMethod.invoke((Object) target, new Object[]{value});
@@ -106,7 +106,7 @@ public class FbiBeanUtils {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Bean->Bean copy 错误.", e);
+            throw new RuntimeException("Bean->Bean copy error.", e);
         }
     }
 
@@ -145,10 +145,11 @@ public class FbiBeanUtils {
     }
 
 
-    private static Object parseByType(Class targetClazz, String srcStr) throws ParseException, InstantiationException, IllegalAccessException, SecurityException, IllegalArgumentException, NoSuchMethodException, InvocationTargetException {
+    private static Object parseByType(Class targetClazz, Object srcObj) throws ParseException, InstantiationException, IllegalAccessException, SecurityException, IllegalArgumentException, NoSuchMethodException, InvocationTargetException {
         Object obj = "";
         String clazzName = targetClazz.getName().trim();
         if (isSimpleType(clazzName)) {
+            String srcStr = srcObj.toString();
             if (FIELD_TYPE_INTEGER.contains(clazzName)) {
                 obj = parseInteger(srcStr);
             } else if (FIELD_TYPE_DATE.contains(clazzName)) {
@@ -159,8 +160,9 @@ public class FbiBeanUtils {
                 obj = srcStr;
             }
         } else {
-            //obj = parseObject(targetClazz, srcStr);
-            throw new RuntimeException("复杂对象copy暂不支持.");
+            //obj = parseObject(targetClazz, srcObj);
+            //throw new RuntimeException("复杂对象copy暂不支持.");
+            obj = srcObj;
         }
         return obj;
     }

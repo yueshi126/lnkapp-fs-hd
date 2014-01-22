@@ -9,20 +9,26 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
- * 第三方服务器 工商E线通 client
+ * 第三方服务器 client
  * User: zhanrui
  * Date: 13-11-27
  */
 public class TpsSocketClient {
     private String ip;
     private int port;
-    private int timeout = 30000; //超时时间：ms  连接超时与读超时统一
+    private int timeout = 30000; //默认超时时间：ms  连接超时与读超时统一
 
     public TpsSocketClient(String ip, int port) {
         this.ip = ip;
         this.port = port;
     }
 
+    /**
+     *
+     * @param sendbuf:不含3字节长度字段 和 1字节的加密标识
+     * @return 响应报文不含3字节的长度字段
+     * @throws Exception 其中：SocketTimeoutException为超时异常
+     */
     public byte[] call(byte[] sendbuf) throws Exception {
         byte[] recvbuf = null;
 
@@ -30,7 +36,6 @@ public class TpsSocketClient {
         Socket socket = new Socket();
         try {
             socket.connect(new InetSocketAddress(addr, port), timeout);
-            //socket.setSendBufferSize(100);
             socket.setSoTimeout(timeout);
 
             OutputStream os = socket.getOutputStream();
@@ -38,22 +43,22 @@ public class TpsSocketClient {
             os.flush();
 
             InputStream is = socket.getInputStream();
-            recvbuf = new byte[8];
+            recvbuf = new byte[3];
             int readNum = is.read(recvbuf);
             if (readNum == -1) {
                 throw new RuntimeException("服务器连接已关闭!");
             }
-            if (readNum < 8) {
+            if (readNum < 3) {
                 throw new RuntimeException("读取报文头长度部分错误...");
             }
             int msgLen = Integer.parseInt(new String(recvbuf).trim());
-            recvbuf = new byte[msgLen - 8];
+            recvbuf = new byte[msgLen - 3];
 
-            //TODO
+            //TODO与市财政的网络连接不稳定 需延时一定时间
             Thread.sleep(500);
 
             readNum = is.read(recvbuf);   //阻塞读
-            if (readNum != msgLen - 8) {
+            if (readNum != msgLen - 3) {
                 throw new RuntimeException("报文长度错误,报文头指示长度:[" + msgLen + "], 实际获取长度:[" + readNum +"]");
             }
         } finally {
@@ -63,28 +68,19 @@ public class TpsSocketClient {
                 //
             }
         }
-        //System.out.println("---:" +  new String(recvbuf,"GBK"));
         return recvbuf;
     }
 
 
     public static void main(String... argv) throws UnsupportedEncodingException {
-        TpsSocketClient mock = new TpsSocketClient("127.0.0.1", 60001);
+        TpsSocketClient mock = new TpsSocketClient("127.0.0.1", 2308);
 
-        //1070：入资登记预交易
-        String msg = "" +
-                "1070" + //交易码
-                "02" + //银行代码	2	CHAR	中行代码统一使用01
-                "1111111" + //柜员号	7	CHAR	右补空格
-                "22222" +  //机构号	5	CHAR	右补空格
-                "3333" +   //地区码	4	CHAR	右补空格
-                "44" +  //工商局编号	2	CHAR
-                "12345678901234567890123456789012"; //预登记号	32	CHAR	右补空格
+        String msg = "..........";
 
         String strLen = null;
         strLen = "" + (msg.getBytes("GBK").length + 4);
         String lpad = "";
-        for (int i = 0; i < 4 - strLen.length(); i++) {
+        for (int i = 0; i < 3 - strLen.length(); i++) {
             lpad += "0";
         }
         strLen = lpad + strLen;
@@ -92,7 +88,7 @@ public class TpsSocketClient {
 
         byte[] recvbuf = new byte[0];
         try {
-            recvbuf = mock.call((strLen + msg).getBytes("GBK"));
+            recvbuf = mock.call(("0" + strLen + msg).getBytes("GBK"));
         } catch (Exception e) {
             e.printStackTrace();
         }

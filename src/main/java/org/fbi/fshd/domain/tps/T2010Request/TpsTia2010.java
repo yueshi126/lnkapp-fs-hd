@@ -1,6 +1,5 @@
 package org.fbi.fshd.domain.tps.T2010Request;
 
-import org.fbi.fshd.domain.tps.T2000Response.TpsToa2000Item;
 import org.fbi.linking.codec.dataformat.annotation.DataField;
 import org.fbi.linking.codec.dataformat.annotation.FixedLengthTextMessage;
 import org.fbi.linking.codec.dataformat.annotation.OneToMany;
@@ -23,8 +22,8 @@ public class TpsTia2010 {
     private String itemNum;
 
     @DataField(seq = 5, length = 22)
-    @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T2000Response.TpsToa2000Item", totalNumberField = "itemNum")
-    private List<TpsToa2000Item> items;
+    @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T2010Request.TpsTia2010Item", totalNumberField = "itemNum")
+    private List<TpsTia2010Item> items;
 
     public String getFisCode() {
         return fisCode;
@@ -58,17 +57,17 @@ public class TpsTia2010 {
         this.itemNum = itemNum;
     }
 
-    public List<TpsToa2000Item> getItems() {
+    public List<TpsTia2010Item> getItems() {
         return items;
     }
 
-    public void setItems(List<TpsToa2000Item> items) {
+    public void setItems(List<TpsTia2010Item> items) {
         this.items = items;
     }
 
     @Override
     public String toString() {
-        return "TpsToa2000{" +
+        return "TpsTia2010{" +
                 "fisCode='" + fisCode + '\'' +
                 ", txnHdlCode='" + txnHdlCode + '\'' +
                 ", fisBizId='" + fisBizId + '\'' +

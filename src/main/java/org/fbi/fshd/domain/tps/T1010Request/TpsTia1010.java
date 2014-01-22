@@ -9,15 +9,19 @@ public class TpsTia1010 {
     private String fisCode;               //财政局编码 4
     @DataField(seq = 2, length = 1)
     private String txnHdlCode;            //交易处理码
-    @DataField(seq = 3, length = 2)
-    private String billType;              //通知书类别 0:一般通知书；1：土地出让金类通知书；（出让金通知书参数启用，暂时没有）
-    @DataField(seq = 4, length = 6)
+    @DataField(seq = 3, length = 10)
+    private String branchId;              //网点代码
+    @DataField(seq = 4, length = 5)
+    private String tlrId;                 //操作员代码
+    @DataField(seq = 5, length = 2)
+    private String voucherType;           //票据类型
+    @DataField(seq = 6, length = 6)
     private String fisBatchSn;            //批次号码信息
-    @DataField(seq = 5, length = 12)
+    @DataField(seq = 7, length = 12)
     private String billId;                //缴款通知书号
-    @DataField(seq = 6, length = 25)
+    @DataField(seq = 8, length = 25)
     private String fisActno;              //财政专户帐号
-    @DataField(seq = 7, length = 1)
+    @DataField(seq = 9, length = 1)
     private String outModeFlag;           //输出模式标识
 
 
@@ -37,12 +41,12 @@ public class TpsTia1010 {
         this.txnHdlCode = txnHdlCode;
     }
 
-    public String getBillType() {
-        return billType;
+    public String getVoucherType() {
+        return voucherType;
     }
 
-    public void setBillType(String billType) {
-        this.billType = billType;
+    public void setVoucherType(String voucherType) {
+        this.voucherType = voucherType;
     }
 
     public String getFisBatchSn() {
@@ -77,12 +81,30 @@ public class TpsTia1010 {
         this.outModeFlag = outModeFlag;
     }
 
+    public String getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(String branchId) {
+        this.branchId = branchId;
+    }
+
+    public String getTlrId() {
+        return tlrId;
+    }
+
+    public void setTlrId(String tlrId) {
+        this.tlrId = tlrId;
+    }
+
     @Override
     public String toString() {
-        return "TpsTia1000{" +
+        return "TpsTia1010{" +
                 "fisCode='" + fisCode + '\'' +
                 ", txnHdlCode='" + txnHdlCode + '\'' +
-                ", billType='" + billType + '\'' +
+                ", branchId='" + branchId + '\'' +
+                ", tlrId='" + tlrId + '\'' +
+                ", voucherType='" + voucherType + '\'' +
                 ", fisBatchSn='" + fisBatchSn + '\'' +
                 ", billId='" + billId + '\'' +
                 ", fisActno='" + fisActno + '\'' +

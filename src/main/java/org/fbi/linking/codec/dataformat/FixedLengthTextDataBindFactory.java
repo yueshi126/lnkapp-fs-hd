@@ -111,7 +111,10 @@ public class FixedLengthTextDataBindFactory extends DataBindAbstractFactory impl
             OneToMany oneToMany = field.getAnnotation(OneToMany.class);
             if (oneToMany != null) {
                 if (repeatRecordNumber == 0) {
-                    throw new RuntimeException("OneToMany报文定义中缺少对应的totalNumberField.");
+                    //throw new RuntimeException("OneToMany报文定义中缺少对应的totalNumberField.");
+
+                    //repeatRecordNumber为0时，添加一个空的token
+                    tokens.add("");
                 }
                 length = dataField.length();
                 for (int i = 0; i < repeatRecordNumber; i++) {
@@ -250,19 +253,21 @@ public class FixedLengthTextDataBindFactory extends DataBindAbstractFactory impl
                         totalNumberField.setAccessible(true);
                         int totalNumber = Integer.parseInt((String) totalNumberField.get(model));
 
-                        int beginIdx = dataField.seq() - 1;
-                        int endIdx = beginIdx + totalNumber;
-                        if (endIdx > tokens.size()) {
-                            endIdx = tokens.size();
-                        }
-                        List<String> oneToManyFieldDataList = tokens.subList(beginIdx, endIdx);
+                        //if (totalNumber > 0) {
+                            int beginIdx = dataField.seq() - 1;
+                            int endIdx = beginIdx + totalNumber;
+                            if (endIdx > tokens.size()) {
+                                endIdx = tokens.size();
+                            }
+                            List<String> oneToManyFieldDataList = tokens.subList(beginIdx, endIdx);
 
-                        if (!oneToManyModelMap.containsKey(cl.getName())) {
-                            oneToManyModelMap.put(cl.getName(), new ArrayList<Object>());
-                        }
+                            if (!oneToManyModelMap.containsKey(cl.getName())) {
+                                oneToManyModelMap.put(cl.getName(), new ArrayList<Object>());
+                            }
 
-                        generateModelMap(cl, null, oneToManyFieldDataList, oneToManyModelMap);
-                        field.set(model, oneToManyModelMap.get(cl.getName()));
+                            generateModelMap(cl, null, oneToManyFieldDataList, oneToManyModelMap);
+                            field.set(model, oneToManyModelMap.get(cl.getName()));
+                        //}
                     } else {
                         throw new RuntimeException("OneToMany defined error.");
                     }

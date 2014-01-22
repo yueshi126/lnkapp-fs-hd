@@ -11,10 +11,8 @@ public class TpsToa2090 {
     private String txnHdlCode;            //交易处理码
     @DataField(seq = 3, length = 1)
     private String rtnCode;               //验证码
-    @DataField(seq = 4, length = 12)
-    private String billId;                //缴款通知书号
-    @DataField(seq = 5, length = 1)
-    private String outModeFlag;           //输出模式标识
+    @DataField(seq = 6, length = 10)
+    private String fisBizId;             //财政业务ID号    财政流水号?
 
 
     public String getFisCode() {
@@ -41,30 +39,21 @@ public class TpsToa2090 {
         this.rtnCode = rtnCode;
     }
 
-    public String getBillId() {
-        return billId;
+    public String getFisBizId() {
+        return fisBizId;
     }
 
-    public void setBillId(String billId) {
-        this.billId = billId;
-    }
-
-    public String getOutModeFlag() {
-        return outModeFlag;
-    }
-
-    public void setOutModeFlag(String outModeFlag) {
-        this.outModeFlag = outModeFlag;
+    public void setFisBizId(String fisBizId) {
+        this.fisBizId = fisBizId;
     }
 
     @Override
     public String toString() {
-        return "TpsToa1090{" +
+        return "TpsToa2090{" +
                 "fisCode='" + fisCode + '\'' +
                 ", txnHdlCode='" + txnHdlCode + '\'' +
                 ", rtnCode='" + rtnCode + '\'' +
-                ", billId='" + billId + '\'' +
-                ", outModeFlag='" + outModeFlag + '\'' +
+                ", fisBizId='" + fisBizId + '\'' +
                 '}';
     }
 }

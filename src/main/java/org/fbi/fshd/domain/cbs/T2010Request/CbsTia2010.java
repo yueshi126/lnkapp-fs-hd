@@ -16,11 +16,52 @@ public class CbsTia2010 {
     @DataField(seq = 2)
     private String instName;      //µ¥Î»
 
-    @DataField(seq = 11)
+    @DataField(seq = 3)
     private String itemNum;
 
-    @DataField(seq = 12)
+    @DataField(seq = 4)
     @OneToMany(mappedTo = "org.fbi.fshd.domain.cbs.T2000Response.CbsTia2010Item", totalNumberField = "itemNum")
     private List<CbsTia2010Item> items;
 
+    public String getFisBizId() {
+        return fisBizId;
+    }
+
+    public void setFisBizId(String fisBizId) {
+        this.fisBizId = fisBizId;
+    }
+
+    public String getInstName() {
+        return instName;
+    }
+
+    public void setInstName(String instName) {
+        this.instName = instName;
+    }
+
+    public String getItemNum() {
+        return itemNum;
+    }
+
+    public void setItemNum(String itemNum) {
+        this.itemNum = itemNum;
+    }
+
+    public List<CbsTia2010Item> getItems() {
+        return items;
+    }
+
+    public void setItems(List<CbsTia2010Item> items) {
+        this.items = items;
+    }
+
+    @Override
+    public String toString() {
+        return "CbsTia2010{" +
+                "fisBizId='" + fisBizId + '\'' +
+                ", instName='" + instName + '\'' +
+                ", itemNum='" + itemNum + '\'' +
+                ", items=" + items +
+                '}';
+    }
 }
