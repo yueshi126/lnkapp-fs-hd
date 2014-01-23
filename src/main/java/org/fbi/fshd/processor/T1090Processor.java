@@ -60,6 +60,7 @@ public class T1090Processor extends AbstractTxnProcessor {
 
         try {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
+            tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
             tpsTia.setTxnHdlCode("4");   //处理码 内容:4—表示红冲信息
             tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));  //财政专户账号
             //tpsTia.setVoucherType("01");     //通知书类型

@@ -71,7 +71,8 @@ public class T1010Processor extends AbstractTxnProcessor {
 
         try {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
-            tpsTia.setTxnHdlCode("4");   //处理码 内容：1—表示请求验证
+            tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
+            tpsTia.setTxnHdlCode("2");   //处理码 内容：2—表示业务完成、请求保存
             tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno")); //财政专户账号
             //tpsTia.setVoucherType("01");     //通知书类型
             tpsTia.setFisBatchSn("000001");   //批次号码信息

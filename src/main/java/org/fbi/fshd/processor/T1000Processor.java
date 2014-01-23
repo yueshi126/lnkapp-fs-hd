@@ -75,6 +75,7 @@ public class T1000Processor extends AbstractTxnProcessor {
 
         try {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
+            tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
             tpsTia.setTxnHdlCode("1");   //处理码 内容：1—表示请求验证
             tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));
             //tpsTia.setVoucherType("01");     //通知书类型

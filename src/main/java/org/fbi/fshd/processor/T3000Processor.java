@@ -2,11 +2,12 @@ package org.fbi.fshd.processor;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.fbi.fshd.domain.cbs.T2010Request.CbsTia2010;
-import org.fbi.fshd.domain.cbs.T2010Request.CbsTia2010Item;
-import org.fbi.fshd.domain.tps.T2010Request.TpsTia2010;
-import org.fbi.fshd.domain.tps.T2010Request.TpsTia2010Item;
-import org.fbi.fshd.domain.tps.T2010Response.TpsToa2010;
+import org.fbi.fshd.domain.cbs.T3000Request.CbsTia3000;
+import org.fbi.fshd.domain.cbs.T3000Response.CbsToa3000;
+import org.fbi.fshd.domain.cbs.T3000Response.CbsToa3000Item;
+import org.fbi.fshd.domain.tps.T3000Request.TpsTia3000;
+import org.fbi.fshd.domain.tps.T3000Response.TpsToa3000;
+import org.fbi.fshd.domain.tps.T3000Response.TpsToa3000Item;
 import org.fbi.fshd.enums.BillStatus;
 import org.fbi.fshd.enums.TxnRtnCode;
 import org.fbi.fshd.helper.FbiBeanUtils;
@@ -33,14 +34,14 @@ import java.util.*;
 
 /**
  * Created by zhanrui on 14-1-20.
- * 手工票缴款确认交易
+ * 汇总通知书输出模式 查询交易
  */
-public class T2010Processor extends AbstractTxnProcessor {
+public class T3000Processor extends AbstractTxnProcessor {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     protected void doRequest(Stdp10ProcessorRequest request, Stdp10ProcessorResponse response) throws ProcessorException, IOException {
-        CbsTia2010 cbsTia;
+        CbsTia3000 cbsTia;
         try {
             cbsTia = unmarshalCbsRequestMsg(request.getRequestBody());
         } catch (Exception e) {
@@ -50,38 +51,37 @@ public class T2010Processor extends AbstractTxnProcessor {
         }
 
         //检查本地数据库信息
-        FsHdPaymentInfo paymentInfo_db = selectNotCanceledPaymentInfoFromDB(cbsTia.getFisBizId());
+        FsHdPaymentInfo paymentInfo_db = selectNotCanceledPaymentInfoFromDB(cbsTia.getBillId());
         if (paymentInfo_db != null) {
             String billStatus = paymentInfo_db.getLnkBillStatus();
+            if (billStatus.equals(BillStatus.INIT.getCode())) { //未缴款，但本地已存在信息
+                List<FsHdPaymentItem> paymentItems = selectPaymentItemsFromDB(paymentInfo_db);
+                String cbsRespMsg = generateCbsRespMsgByLocalDbInfo(paymentInfo_db, paymentItems);
+                response.setHeader("rtnCode", TxnRtnCode.TXN_EXECUTE_SECCESS.getCode());
+                response.setResponseBody(cbsRespMsg.getBytes(response.getCharacterEncoding()));
+                return;
+            }
+
             if (billStatus.equals(BillStatus.PAYOFF.getCode())) { //已缴款
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
                 logger.info("===此笔缴款单已缴款.");
-                return;
-            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
-                marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "此笔缴款单状态错误", response);
-                logger.info("===此笔缴款单状态错误.");
                 return;
             }
         }
 
         //第三方通讯处理
-        TpsTia2010 tpsTia = new TpsTia2010();
-        TpsToa2010 tpsToa;
+        TpsTia3000 tpsTia = new TpsTia3000();
+        TpsToa3000 tpsToa;
 
         try {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
             tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
-            tpsTia.setTxnHdlCode("2");   //处理码 内容：2—表示业务完成、请求保存
-
-            List<TpsTia2010Item>  tpsTiaItems  = new ArrayList<>();
-            for (CbsTia2010Item cbsTiaItem : cbsTia.getItems()) {
-                TpsTia2010Item tpsTiaItem = new TpsTia2010Item();
-                FbiBeanUtils.copyProperties(cbsTiaItem, tpsTiaItem);
-                tpsTiaItems.add(tpsTiaItem);
-            }
-            tpsTia.setItems(tpsTiaItems);
-
-            byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "2010");
+            tpsTia.setTxnHdlCode("E");   //处理码 内容：E—表示请求验证
+            tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));
+            //tpsTia.setVoucherType("01");     //通知书类型
+            //tpsTia.setFisBatchSn("000001");   //批次号码信息
+            tpsTia.setOutModeFlag("O"); //输出模式标识
+            byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "3000");
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);
         } catch (SocketTimeoutException e) {
             logger.error("与第三方服务器通讯处理超时.", e);
@@ -96,10 +96,10 @@ public class T2010Processor extends AbstractTxnProcessor {
         //特色平台响应
         if ("0".equals(tpsToa.getRtnCode())) { //交易成功
             try {
-                //TODO 判断返回的FISBIZID是否与发出的一致
-
-                processTxn(paymentInfo_db, request);
-                marshalSuccessTxnCbsResponse(response);
+                processTxn(tpsToa, request);
+                String cbsRespMsg = marshalCbsResponseMsg(tpsToa);
+                response.setHeader("rtnCode", TxnRtnCode.TXN_EXECUTE_SECCESS.getCode());
+                response.setResponseBody(cbsRespMsg.getBytes(response.getCharacterEncoding()));
             } catch (Exception e) {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, e.getMessage(), response);
                 logger.error("业务处理失败.", e);
@@ -111,16 +111,42 @@ public class T2010Processor extends AbstractTxnProcessor {
     }
 
     //解包生成CBS请求报文BEAN
-    private CbsTia2010 unmarshalCbsRequestMsg(byte[] body) throws Exception {
-        CbsTia2010 tia = new CbsTia2010();
+    private CbsTia3000 unmarshalCbsRequestMsg(byte[] body) throws Exception {
+        CbsTia3000 tia = new CbsTia3000();
         SeperatedTextDataFormat dataFormat = new SeperatedTextDataFormat(tia.getClass().getPackage().getName());
-        tia = (CbsTia2010) dataFormat.fromMessage(new String(body, "GBK"), "CbsTia2010");
+        tia = (CbsTia3000) dataFormat.fromMessage(new String(body, "GBK"), "CbsTia3000");
         return tia;
+    }
+
+    //根据本地数据库中的已保存信息生成CBS响应报文
+    private String generateCbsRespMsgByLocalDbInfo(FsHdPaymentInfo paymentInfo, List<FsHdPaymentItem> paymentItems) {
+        CbsToa3000 cbsToa = new CbsToa3000();
+        FbiBeanUtils.copyProperties(paymentInfo, cbsToa);
+
+        List<CbsToa3000Item> cbsToaItems = new ArrayList<>();
+        for (FsHdPaymentItem paymentItem : paymentItems) {
+            CbsToa3000Item cbsToaItem = new CbsToa3000Item();
+            FbiBeanUtils.copyProperties(paymentItem, cbsToaItem);
+            cbsToaItems.add(cbsToaItem);
+        }
+        cbsToa.setItems(cbsToaItems);
+        cbsToa.setItemNum("" + cbsToaItems.size());
+
+        String cbsRespMsg = "";
+        Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
+        modelObjectsMap.put(cbsToa.getClass().getName(), cbsToa);
+        SeperatedTextDataFormat cbsDataFormat = new SeperatedTextDataFormat(cbsToa.getClass().getPackage().getName());
+        try {
+            cbsRespMsg = (String) cbsDataFormat.toMessage(modelObjectsMap);
+        } catch (Exception e) {
+            throw new RuntimeException("特色平台报文转换失败.", e);
+        }
+        return cbsRespMsg;
     }
 
 
     //组第三方服务器请求报文
-    private byte[] marshalTpsRequestMsg(TpsTia2010 tpsTia) {
+    private byte[] marshalTpsRequestMsg(TpsTia3000 tpsTia) {
         Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
         modelObjectsMap.put(tpsTia.getClass().getName(), tpsTia);
         FixedLengthTextDataFormat dataFormat = new FixedLengthTextDataFormat(tpsTia.getClass().getPackage().getName());
@@ -136,25 +162,48 @@ public class T2010Processor extends AbstractTxnProcessor {
     }
 
     //解包生成第三方响应报文BEAN
-    private TpsToa2010 unmarshalTpsResponseMsg(byte[] response) throws Exception {
-        TpsToa2010 toa = new TpsToa2010();
+    private TpsToa3000 unmarshalTpsResponseMsg(byte[] response) throws Exception {
+        TpsToa3000 toa = new TpsToa3000();
         FixedLengthTextDataFormat dataFormat = new FixedLengthTextDataFormat(toa.getClass().getPackage().getName());
-        toa = (TpsToa2010) dataFormat.fromMessage(response, "TpsToa2010");
+        toa = (TpsToa3000) dataFormat.fromMessage(response, "TpsToa3000");
 
         return toa;
     }
 
+    //根据第三方服务器响应报文生成特色平台响应报文
+    private String marshalCbsResponseMsg(TpsToa3000 tpsToa) {
+        CbsToa3000 cbsToa = new CbsToa3000();
+        FbiBeanUtils.copyProperties(tpsToa, cbsToa);
+        List<CbsToa3000Item> cbsToa3000Items = new ArrayList<>();
+        for (TpsToa3000Item tpstoaItem : tpsToa.getItems()) {
+            CbsToa3000Item cbsToaItem = new CbsToa3000Item();
+            FbiBeanUtils.copyProperties(tpstoaItem, cbsToaItem);
+            cbsToa3000Items.add(cbsToaItem);
+        }
+        cbsToa.setItems(cbsToa3000Items);
+
+        String cbsRespMsg = "";
+        Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
+        modelObjectsMap.put(cbsToa.getClass().getName(), cbsToa);
+        SeperatedTextDataFormat cbsDataFormat = new SeperatedTextDataFormat(cbsToa.getClass().getPackage().getName());
+        try {
+            cbsRespMsg = (String) cbsDataFormat.toMessage(modelObjectsMap);
+        } catch (Exception e) {
+            throw new RuntimeException("特色平台报文转换失败.", e);
+        }
+        return cbsRespMsg;
+    }
 
     //=======数据库处理=================================================
     //查找未撤销的缴款单记录
-    private FsHdPaymentInfo selectNotCanceledPaymentInfoFromDB(String fisBizId) {
+    private FsHdPaymentInfo selectNotCanceledPaymentInfoFromDB(String billId) {
         SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
         FsHdPaymentInfoMapper mapper;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             mapper = session.getMapper(FsHdPaymentInfoMapper.class);
             FsHdPaymentInfoExample example = new FsHdPaymentInfoExample();
             example.createCriteria()
-                    .andFisBizIdEqualTo(fisBizId)
+                    .andBillIdEqualTo(billId)
                     .andLnkBillStatusNotEqualTo(BillStatus.CANCELED.getCode());
             List<FsHdPaymentInfo> infos = mapper.selectByExample(example);
             if (infos.size() == 0) {
@@ -178,31 +227,45 @@ public class T2010Processor extends AbstractTxnProcessor {
     }
 
 
-    private void processTxn(FsHdPaymentInfo paymentInfo, Stdp10ProcessorRequest request) {
+    private void processTxn(TpsToa3000 tpsToa, Stdp10ProcessorRequest request) {
+        FsHdPaymentInfo paymentInfo = new FsHdPaymentInfo();
+        FbiBeanUtils.copyProperties(tpsToa, paymentInfo);
 
         SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
         SqlSession session = sqlSessionFactory.openSession();
         try {
-            Date date = new SimpleDateFormat("yyyyMMddHHmmss").parse(request.getHeader("txnTime"));
-            paymentInfo.setBankindate(new SimpleDateFormat("yyyyMMdd").format(date));
+            paymentInfo.setPkid(UUID.randomUUID().toString());
+            paymentInfo.setOperInitBankid(request.getHeader("branchId"));
+            paymentInfo.setOperInitTlrid(request.getHeader("tellerId"));
+            paymentInfo.setOperInitDate(new SimpleDateFormat("yyyyMMdd").format(new Date()));
+            paymentInfo.setOperInitTime(new SimpleDateFormat("HHmmss").format(new Date()));
+            paymentInfo.setOperInitHostsn(request.getHeader("serialNo"));
 
-            paymentInfo.setOperPayBankid(request.getHeader("branchId"));
-            paymentInfo.setOperPayTlrid(request.getHeader("tellerId"));
-            paymentInfo.setOperPayDate(new SimpleDateFormat("yyyyMMdd").format(new Date()));
-            paymentInfo.setOperPayTime(new SimpleDateFormat("HHmmss").format(new Date()));
-            paymentInfo.setOperPayHostsn(request.getHeader("serialNo"));
+            paymentInfo.setArchiveFlag("0");
 
-            paymentInfo.setHostBookFlag("1");
+            paymentInfo.setHostBookFlag("0");
             paymentInfo.setHostChkFlag("0");
-            paymentInfo.setFbBookFlag("1");
+            paymentInfo.setFbBookFlag("0");
             paymentInfo.setFbChkFlag("0");
 
+            paymentInfo.setAreaCode("HuangDao-FeiShui");
             paymentInfo.setHostAckFlag("0");
-            paymentInfo.setLnkBillStatus(BillStatus.PAYOFF.getCode()); //已缴款
-            FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
-            infoMapper.updateByPrimaryKey(paymentInfo);
-            session.commit();
+            paymentInfo.setLnkBillStatus("0"); //初始化
+            paymentInfo.setManualFlag("0"); //非手工票
 
+            FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
+            infoMapper.insert(paymentInfo);
+
+            FsHdPaymentItemMapper itemMapper = session.getMapper(FsHdPaymentItemMapper.class);
+            int i = 0;
+            for (TpsToa3000Item toaItem : tpsToa.getItems()) {
+                i++;
+                FsHdPaymentItem paymentItem = new FsHdPaymentItem();
+                FbiBeanUtils.copyProperties(toaItem, paymentItem);
+                paymentItem.setMainPkid(paymentInfo.getPkid());
+                itemMapper.insert(paymentItem);
+            }
+            session.commit();
         } catch (Exception e) {
             session.rollback();
             throw new RuntimeException("业务逻辑处理失败。", e);
