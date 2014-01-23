@@ -14,16 +14,16 @@ public class TpsTia2090 {
     @DataField(seq = 3, length = 25)
     private String fisActno;              //财政专户帐号
     @DataField(seq = 4, length = 10)
-    private String branchId;             //网点代码
+    private String branchId;              //网点代码
     @DataField(seq = 5, length = 5)
-    private String tlrId;                //操作员代码
+    private String tlrId;                 //操作员代码
 
     @DataField(seq = 6, length = 10)
-    private String fisBizId;             //财政业务ID号    财政流水号?
+    private String fisBizId;              //财政业务ID号    财政流水号?
     @DataField(seq = 7, length = 7)
-    private String instCode;                //单位代码
+    private String instCode;              //单位代码
     @DataField(seq = 8, length = 12)
-    private BigDecimal payAmt;                 //总金额
+    private BigDecimal payAmt;            //总金额
 
     public String getFisCode() {
         return fisCode;

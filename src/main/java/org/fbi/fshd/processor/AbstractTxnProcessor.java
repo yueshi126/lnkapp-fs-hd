@@ -74,7 +74,7 @@ public abstract class AbstractTxnProcessor extends Stdp10Processor {
         if (errMsg == null) {
             errMsg = txnRtnCode.getTitle();
         }
-        String msg = getErrorRespMsgForStarring(errMsg);
+        String msg = getErrorRespMsgForCbs(errMsg);
         response.setHeader("rtnCode", txnRtnCode.getCode());
         try {
             response.setResponseBody(msg.getBytes(response.getCharacterEncoding()));
@@ -84,19 +84,19 @@ public abstract class AbstractTxnProcessor extends Stdp10Processor {
     }
 
     //组统一的错误响应报文 txtMsg
-    private String getErrorRespMsgForStarring(String errMsg) {
+    private String getErrorRespMsgForCbs(String errMsg) {
         TOA9999 toa = new TOA9999();
         toa.setErrMsg(errMsg);
-        String starringRespMsg;
+        String cbsRespMsg;
         Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
         modelObjectsMap.put(toa.getClass().getName(), toa);
-        SeperatedTextDataFormat starringDataFormat = new SeperatedTextDataFormat(toa.getClass().getPackage().getName());
+        SeperatedTextDataFormat dataFormat = new SeperatedTextDataFormat(toa.getClass().getPackage().getName());
         try {
-            starringRespMsg = (String) starringDataFormat.toMessage(modelObjectsMap);
+            cbsRespMsg = (String) dataFormat.toMessage(modelObjectsMap);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return starringRespMsg;
+        return cbsRespMsg;
     }
 
     //根据第三方服务器的返回码从配置文件中获取对应的信息

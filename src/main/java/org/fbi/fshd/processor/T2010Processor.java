@@ -33,7 +33,7 @@ import java.util.*;
 
 /**
  * Created by zhanrui on 14-1-20.
- * æ‰‹å·¥ç¥¨ç¼´æ¬¾ç¡®è®¤äº¤æ˜“
+ * ÊÖ¹¤Æ±½É¿îÈ·ÈÏ½»Ò×
  */
 public class T2010Processor extends AbstractTxnProcessor {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -44,34 +44,34 @@ public class T2010Processor extends AbstractTxnProcessor {
         try {
             cbsTia = unmarshalCbsRequestMsg(request.getRequestBody());
         } catch (Exception e) {
-            logger.error("ç‰¹è‰²ä¸šåŠ¡å¹³å°è¯·æ±‚æŠ¥æ–‡è§£æé”™è¯¯.", e);
+            logger.error("ÌØÉ«ÒµÎñÆ½Ì¨ÇëÇó±¨ÎÄ½âÎö´íÎó.", e);
             marshalAbnormalCbsResponse(TxnRtnCode.CBSMSG_UNMARSHAL_FAILED, null, response);
             return;
         }
 
-        //æ£€æŸ¥æœ¬åœ°æ•°æ®åº“ä¿¡æ¯
+        //¼ì²é±¾µØÊı¾İ¿âĞÅÏ¢
         FsHdPaymentInfo paymentInfo_db = selectNotCanceledPaymentInfoFromDB(cbsTia.getFisBizId());
         if (paymentInfo_db != null) {
             String billStatus = paymentInfo_db.getLnkBillStatus();
-            if (billStatus.equals(BillStatus.PAYOFF.getCode())) { //å·²ç¼´æ¬¾
+            if (billStatus.equals(BillStatus.PAYOFF.getCode())) { //ÒÑ½É¿î
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
-                logger.info("===æ­¤ç¬”ç¼´æ¬¾å•å·²ç¼´æ¬¾.");
+                logger.info("===´Ë±Ê½É¿îµ¥ÒÑ½É¿î.");
                 return;
-            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //éåˆå§‹çŠ¶æ€
-                marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "æ­¤ç¬”ç¼´æ¬¾å•çŠ¶æ€é”™è¯¯", response);
-                logger.info("===æ­¤ç¬”ç¼´æ¬¾å•çŠ¶æ€é”™è¯¯.");
+            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //·Ç³õÊ¼×´Ì¬
+                marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "´Ë±Ê½É¿îµ¥×´Ì¬´íÎó", response);
+                logger.info("===´Ë±Ê½É¿îµ¥×´Ì¬´íÎó.");
                 return;
             }
         }
 
-        //ç¬¬ä¸‰æ–¹é€šè®¯å¤„ç†
+        //µÚÈı·½Í¨Ñ¶´¦Àí
         TpsTia2010 tpsTia = new TpsTia2010();
         TpsToa2010 tpsToa;
 
         try {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
             tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
-            tpsTia.setTxnHdlCode("2");   //å¤„ç†ç  å†…å®¹ï¼š2â€”è¡¨ç¤ºä¸šåŠ¡å®Œæˆã€è¯·æ±‚ä¿å­˜
+            tpsTia.setTxnHdlCode("2");   //´¦ÀíÂë ÄÚÈİ£º2¡ª±íÊ¾ÒµÎñÍê³É¡¢ÇëÇó±£´æ
 
             List<TpsTia2010Item>  tpsTiaItems  = new ArrayList<>();
             for (CbsTia2010Item cbsTiaItem : cbsTia.getItems()) {
@@ -84,33 +84,33 @@ public class T2010Processor extends AbstractTxnProcessor {
             byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "2010");
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);
         } catch (SocketTimeoutException e) {
-            logger.error("ä¸ç¬¬ä¸‰æ–¹æœåŠ¡å™¨é€šè®¯å¤„ç†è¶…æ—¶.", e);
-            response.setHeader("rtnCode", TxnRtnCode.MSG_RECV_TIMEOUT.getCode());
+            logger.error("ÓëµÚÈı·½·şÎñÆ÷Í¨Ñ¶´¦Àí³¬Ê±.", e);
+            marshalAbnormalCbsResponse(TxnRtnCode.MSG_RECV_TIMEOUT, "ÓëµÚÈı·½·şÎñÆ÷Í¨Ñ¶´¦Àí³¬Ê±", response);
             return;
         } catch (Exception e) {
-            logger.error("ä¸ç¬¬ä¸‰æ–¹æœåŠ¡å™¨é€šè®¯å¤„ç†å¼‚å¸¸.", e);
-            response.setHeader("rtnCode", TxnRtnCode.MSG_COMM_ERROR.getCode());
+            logger.error("ÓëµÚÈı·½·şÎñÆ÷Í¨Ñ¶´¦ÀíÒì³£.", e);
+            marshalAbnormalCbsResponse(TxnRtnCode.MSG_COMM_ERROR, "ÓëµÚÈı·½·şÎñÆ÷Í¨Ñ¶´¦ÀíÒì³£", response);
             return;
         }
 
-        //ç‰¹è‰²å¹³å°å“åº”
-        if ("0".equals(tpsToa.getRtnCode())) { //äº¤æ˜“æˆåŠŸ
+        //ÌØÉ«Æ½Ì¨ÏìÓ¦
+        if ("0".equals(tpsToa.getRtnCode())) { //½»Ò×³É¹¦
             try {
-                //TODO åˆ¤æ–­è¿”å›çš„FISBIZIDæ˜¯å¦ä¸å‘å‡ºçš„ä¸€è‡´
+                //TODO ÅĞ¶Ï·µ»ØµÄFISBIZIDÊÇ·ñÓë·¢³öµÄÒ»ÖÂ
 
                 processTxn(paymentInfo_db, request);
                 marshalSuccessTxnCbsResponse(response);
             } catch (Exception e) {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, e.getMessage(), response);
-                logger.error("ä¸šåŠ¡å¤„ç†å¤±è´¥.", e);
+                logger.error("ÒµÎñ´¦ÀíÊ§°Ü.", e);
             }
-        } else {  //å¤„ç†TPSè¿”å›é”™è¯¯ç 
+        } else {  //´¦ÀíTPS·µ»Ø´íÎóÂë
             String errmsg = getTpsRtnErrorMsg(tpsToa.getRtnCode());
             marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, errmsg, response);
         }
     }
 
-    //è§£åŒ…ç”ŸæˆCBSè¯·æ±‚æŠ¥æ–‡BEAN
+    //½â°üÉú³ÉCBSÇëÇó±¨ÎÄBEAN
     private CbsTia2010 unmarshalCbsRequestMsg(byte[] body) throws Exception {
         CbsTia2010 tia = new CbsTia2010();
         SeperatedTextDataFormat dataFormat = new SeperatedTextDataFormat(tia.getClass().getPackage().getName());
@@ -119,7 +119,7 @@ public class T2010Processor extends AbstractTxnProcessor {
     }
 
 
-    //ç»„ç¬¬ä¸‰æ–¹æœåŠ¡å™¨è¯·æ±‚æŠ¥æ–‡
+    //×éµÚÈı·½·şÎñÆ÷ÇëÇó±¨ÎÄ
     private byte[] marshalTpsRequestMsg(TpsTia2010 tpsTia) {
         Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
         modelObjectsMap.put(tpsTia.getClass().getName(), tpsTia);
@@ -129,13 +129,13 @@ public class T2010Processor extends AbstractTxnProcessor {
             String sendMsg = (String) dataFormat.toMessage(modelObjectsMap);
             buf = generateTpsRequestHeader(sendMsg).getBytes(TPS_ENCODING);
         } catch (Exception e) {
-            throw new RuntimeException("ç¬¬ä¸‰æ–¹è¯·æ±‚æŠ¥æ–‡å¤„ç†é”™è¯¯");
+            throw new RuntimeException("µÚÈı·½ÇëÇó±¨ÎÄ´¦Àí´íÎó");
         }
 
         return buf;
     }
 
-    //è§£åŒ…ç”Ÿæˆç¬¬ä¸‰æ–¹å“åº”æŠ¥æ–‡BEAN
+    //½â°üÉú³ÉµÚÈı·½ÏìÓ¦±¨ÎÄBEAN
     private TpsToa2010 unmarshalTpsResponseMsg(byte[] response) throws Exception {
         TpsToa2010 toa = new TpsToa2010();
         FixedLengthTextDataFormat dataFormat = new FixedLengthTextDataFormat(toa.getClass().getPackage().getName());
@@ -145,8 +145,8 @@ public class T2010Processor extends AbstractTxnProcessor {
     }
 
 
-    //=======æ•°æ®åº“å¤„ç†=================================================
-    //æŸ¥æ‰¾æœªæ’¤é”€çš„ç¼´æ¬¾å•è®°å½•
+    //=======Êı¾İ¿â´¦Àí=================================================
+    //²éÕÒÎ´³·ÏúµÄ½É¿îµ¥¼ÇÂ¼
     private FsHdPaymentInfo selectNotCanceledPaymentInfoFromDB(String fisBizId) {
         SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
         FsHdPaymentInfoMapper mapper;
@@ -160,8 +160,8 @@ public class T2010Processor extends AbstractTxnProcessor {
             if (infos.size() == 0) {
                 return null;
             }
-            if (infos.size() != 1) { //åŒä¸€ä¸ªç¼´æ¬¾å•å·ï¼Œæœªæ’¤é”€çš„åœ¨è¡¨ä¸­åªèƒ½å­˜åœ¨ä¸€æ¡è®°å½•
-                throw new RuntimeException("è®°å½•çŠ¶æ€é”™è¯¯.");
+            if (infos.size() != 1) { //Í¬Ò»¸ö½É¿îµ¥ºÅ£¬Î´³·ÏúµÄÔÚ±íÖĞÖ»ÄÜ´æÔÚÒ»Ìõ¼ÇÂ¼
+                throw new RuntimeException("¼ÇÂ¼×´Ì¬´íÎó.");
             }
             return infos.get(0);
         }
@@ -198,14 +198,14 @@ public class T2010Processor extends AbstractTxnProcessor {
             paymentInfo.setFbChkFlag("0");
 
             paymentInfo.setHostAckFlag("0");
-            paymentInfo.setLnkBillStatus(BillStatus.PAYOFF.getCode()); //å·²ç¼´æ¬¾
+            paymentInfo.setLnkBillStatus(BillStatus.PAYOFF.getCode()); //ÒÑ½É¿î
             FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
             infoMapper.updateByPrimaryKey(paymentInfo);
             session.commit();
 
         } catch (Exception e) {
             session.rollback();
-            throw new RuntimeException("ä¸šåŠ¡é€»è¾‘å¤„ç†å¤±è´¥ã€‚", e);
+            throw new RuntimeException("ÒµÎñÂß¼­´¦ÀíÊ§°Ü¡£", e);
         } finally {
             session.close();
         }

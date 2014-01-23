@@ -13,7 +13,7 @@ public class MD5Helper {
         try {
             messagedigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            System.err.println(MD5Helper.class.getName() + "MD5åˆå§‹å¤±è´¥!");
+            System.err.println(MD5Helper.class.getName() + "MD5³õÊ¼Ê§°Ü!");
             e.printStackTrace();
         }
     }
@@ -40,9 +40,9 @@ public class MD5Helper {
     }
 
     private static void appendHexPair(byte bt, StringBuffer stringbuffer) {
-        // å–å­—èŠ‚ä¸­é«˜ 4 ä½çš„æ•°å­—è½¬æ¢
+        // È¡×Ö½ÚÖĞ¸ß 4 Î»µÄÊı×Ö×ª»»
         char c0 = hexDigits[(bt & 0xf0) >> 4];
-        // å–å­—èŠ‚ä¸­ä½ 4 ä½çš„æ•°å­—è½¬æ¢
+        // È¡×Ö½ÚÖĞµÍ 4 Î»µÄÊı×Ö×ª»»
         char c1 = hexDigits[bt & 0xf];
         stringbuffer.append(c0);
         stringbuffer.append(c1);

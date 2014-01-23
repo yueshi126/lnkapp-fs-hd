@@ -22,7 +22,7 @@ public enum MybatisFactory {
             reader = Resources.getResourceAsReader("mybatis-config.xml");
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("MYBATIS 鍙傛暟鏂囦欢璇诲彇閿欒!",e);
+            throw new RuntimeException("MYBATIS 参数文件读取错误!",e);
         }
         sessionFactory = new SqlSessionFactoryBuilder().build(reader);
     }

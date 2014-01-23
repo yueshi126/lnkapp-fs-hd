@@ -10,7 +10,7 @@ import java.net.URL;
 import java.util.Properties;
 
 /**
- * é¡¹ç›®é…ç½®æ–‡ä»¶ç®¡ç†.
+ * ÏîÄ¿ÅäÖÃÎÄ¼þ¹ÜÀí.
  * User: zhanrui
  */
 public class ProjectConfigManager {
@@ -46,9 +46,9 @@ public class ProjectConfigManager {
 
         if (newTime == 0) {
             if (fileLastModifiedTime == 0) {
-                System.err.println(PROP_FILE_NAME + " æ–‡ä»¶ä¸å­˜åœ¨.");
+                System.err.println(PROP_FILE_NAME + " ÎÄ¼þ²»´æÔÚ.");
             } else {
-                System.err.println(PROP_FILE_NAME + " æ–‡ä»¶å·²è¢«åˆ é™¤!");
+                System.err.println(PROP_FILE_NAME + " ÎÄ¼þÒÑ±»É¾³ý!");
             }
             return null;
         } else if (newTime > fileLastModifiedTime) {
