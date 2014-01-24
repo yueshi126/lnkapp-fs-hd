@@ -19,7 +19,7 @@ public class TpsToa3000Item {
     private String measure;    //计量单位
     @DataField(seq = 4, length = 6)
     private String handleNum;  //计量数量
-    @DataField(seq = 5, length = 10)
+    @DataField(seq = 5, length = 12)
     private BigDecimal txnAmt;  //金额
 
     public String getPrjCode() {

@@ -17,7 +17,7 @@ public class TpsTia2000Item {
     private String measure;    //计量单位
     @DataField(seq = 3, length = 6)
     private String handleNum;  //计量数量
-    @DataField(seq = 4, length = 10)
+    @DataField(seq = 4, length = 12)
     private BigDecimal txnAmt;  //金额
 
     public String getPrjCode() {
