@@ -119,7 +119,7 @@ public abstract class AbstractTxnProcessor extends Stdp10Processor {
 
     //第三方服务器通讯报文头的长度处理
     protected String generateTpsRequestHeader(String sendMsg) throws UnsupportedEncodingException {
-        String lenField = "" + (sendMsg.getBytes(TPS_ENCODING).length + 4);
+        String lenField = "" + (sendMsg.getBytes(TPS_ENCODING).length + 3);
         String rpad = "";
         for (int i = 0; i < 3 - lenField.length(); i++) {
             rpad += " ";

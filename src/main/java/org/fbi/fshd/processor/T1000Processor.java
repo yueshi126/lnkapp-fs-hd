@@ -77,7 +77,7 @@ public class T1000Processor extends AbstractTxnProcessor {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
             tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
             tpsTia.setTxnHdlCode("1");   //处理码 内容：1—表示请求验证
-            tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));
+//            tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno"));
             //tpsTia.setVoucherType("01");     //通知书类型
             tpsTia.setFisBatchSn("000001");   //批次号码信息
             tpsTia.setOutModeFlag("O"); //输出模式标识
@@ -93,6 +93,7 @@ public class T1000Processor extends AbstractTxnProcessor {
             return;
         }
 
+        logger.info(tpsToa.toString());
         //特色平台响应
         if ("0".equals(tpsToa.getRtnCode())) { //交易成功
             try {

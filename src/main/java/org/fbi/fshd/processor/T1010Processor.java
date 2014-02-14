@@ -58,7 +58,7 @@ public class T1010Processor extends AbstractTxnProcessor {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
                 logger.info("===此笔缴款单已缴款.");
                 return;
-            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
+            } else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "此笔缴款单状态错误", response);
                 logger.info("===此笔缴款单状态错误.");
                 return;
@@ -73,7 +73,8 @@ public class T1010Processor extends AbstractTxnProcessor {
             FbiBeanUtils.copyProperties(cbsTia, tpsTia);
             tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
             tpsTia.setTxnHdlCode("2");   //处理码 内容：2—表示业务完成、请求保存
-            tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno")); //财政专户账号
+            tpsTia.setTxnAmt(cbsTia.getPayAmt()); // 金额
+//            tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno")); //财政专户账号
             //tpsTia.setVoucherType("01");     //通知书类型
             tpsTia.setFisBatchSn("000001");   //批次号码信息
             tpsTia.setOutModeFlag("O");     //输出模式标识

@@ -15,9 +15,9 @@ public class TpsTia1000 {
     private String fisBatchSn;            //批次号码信息
     @DataField(seq = 5, length = 12)
     private String billId;                //缴款通知书号
-    @DataField(seq = 6, length = 25)
-    private String fisActno;              //财政专户帐号
-    @DataField(seq = 7, length = 1)
+//    @DataField(seq = 6, length = 25)
+//    private String fisActno;              //财政专户帐号
+    @DataField(seq = 6, length = 1)
     private String outModeFlag;           //输出模式标识
 
 
@@ -61,13 +61,13 @@ public class TpsTia1000 {
         this.billId = billId;
     }
 
-    public String getFisActno() {
+/*    public String getFisActno() {
         return fisActno;
     }
 
     public void setFisActno(String fisActno) {
         this.fisActno = fisActno;
-    }
+    }*/
 
     public String getOutModeFlag() {
         return outModeFlag;
@@ -85,7 +85,7 @@ public class TpsTia1000 {
                 ", voucherType='" + voucherType + '\'' +
                 ", fisBatchSn='" + fisBatchSn + '\'' +
                 ", billId='" + billId + '\'' +
-                ", fisActno='" + fisActno + '\'' +
+//                ", fisActno='" + fisActno + '\'' +
                 ", outModeFlag='" + outModeFlag + '\'' +
                 '}';
     }

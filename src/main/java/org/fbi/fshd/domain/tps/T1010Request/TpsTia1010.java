@@ -2,6 +2,9 @@ package org.fbi.fshd.domain.tps.T1010Request;
 
 import org.fbi.linking.codec.dataformat.annotation.DataField;
 import org.fbi.linking.codec.dataformat.annotation.FixedLengthTextMessage;
+import org.fbi.linking.codec.dataformat.format.BigDecimalFormat;
+
+import java.math.BigDecimal;
 
 @FixedLengthTextMessage(mainClass = true)
 public class TpsTia1010 {
@@ -19,8 +22,13 @@ public class TpsTia1010 {
     private String fisBatchSn;            //批次号码信息
     @DataField(seq = 7, length = 12)
     private String billId;                //缴款通知书号
-    @DataField(seq = 8, length = 25)
-    private String fisActno;              //财政专户帐号
+
+    //20140215 缴款金额
+    @DataField(seq = 8, length = 12)
+    private BigDecimal txnAmt;
+    //
+//    @DataField(seq = 8, length = 25)
+//    private String fisActno;              //财政专户帐号
     @DataField(seq = 9, length = 1)
     private String outModeFlag;           //输出模式标识
 
@@ -65,14 +73,22 @@ public class TpsTia1010 {
         this.billId = billId;
     }
 
-    public String getFisActno() {
-        return fisActno;
+    public BigDecimal getTxnAmt() {
+        return txnAmt;
     }
 
-    public void setFisActno(String fisActno) {
-        this.fisActno = fisActno;
+    public void setTxnAmt(BigDecimal txnAmt) {
+        this.txnAmt = txnAmt;
     }
 
+    /* public String getFisActno() {
+            return fisActno;
+        }
+
+        public void setFisActno(String fisActno) {
+            this.fisActno = fisActno;
+        }
+    */
     public String getOutModeFlag() {
         return outModeFlag;
     }
@@ -107,7 +123,8 @@ public class TpsTia1010 {
                 ", voucherType='" + voucherType + '\'' +
                 ", fisBatchSn='" + fisBatchSn + '\'' +
                 ", billId='" + billId + '\'' +
-                ", fisActno='" + fisActno + '\'' +
+                ", txnAmt='" + txnAmt + '\'' +
+//                ", fisActno='" + fisActno + '\'' +
                 ", outModeFlag='" + outModeFlag + '\'' +
                 '}';
     }
