@@ -49,9 +49,9 @@ public class TpsTia2000 {
     private String remark;                  //备注
     @DataField(seq = 16, length = 2)
     private String voucherType;             //票据类型
+//    @DataField(seq = 17, length = 1)
+//    private String billType;                //通知书类别
     @DataField(seq = 17, length = 1)
-    private String billType;                //通知书类别
-    @DataField(seq = 18, length = 1)
     private String outModeFlag;            //输出模式标识
 
     public String getFisCode() {
@@ -182,13 +182,13 @@ public class TpsTia2000 {
         this.voucherType = voucherType;
     }
 
-    public String getBillType() {
+  /*  public String getBillType() {
         return billType;
     }
 
     public void setBillType(String billType) {
         this.billType = billType;
-    }
+    }*/
 
     public String getOutModeFlag() {
         return outModeFlag;
@@ -217,7 +217,7 @@ public class TpsTia2000 {
                 ", verifyNo='" + verifyNo + '\'' +
                 ", remark='" + remark + '\'' +
                 ", voucherType='" + voucherType + '\'' +
-                ", billType='" + billType + '\'' +
+//                ", billType='" + billType + '\'' +
                 ", outModeFlag='" + outModeFlag + '\'' +
                 '}';
     }

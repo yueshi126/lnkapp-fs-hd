@@ -3,25 +3,30 @@ package org.fbi.fshd.domain.tps.T3010Request;
 import org.fbi.linking.codec.dataformat.annotation.DataField;
 import org.fbi.linking.codec.dataformat.annotation.FixedLengthTextMessage;
 
+import java.math.BigDecimal;
+
 @FixedLengthTextMessage(mainClass = true)
 public class TpsTia3010 {
     @DataField(seq = 1, length = 1)
     private String fisCode;               //财政局编码 4
     @DataField(seq = 2, length = 1)
     private String txnHdlCode;            //交易处理码
-    @DataField(seq = 3, length = 10)
-    private String branchId;              //网点代码
-    @DataField(seq = 4, length = 5)
-    private String tlrId;                 //操作员代码
-    @DataField(seq = 5, length = 2)
-    private String voucherType;           //票据类型
-    @DataField(seq = 6, length = 6)
-    private String fisBatchSn;            //批次号码信息
-    @DataField(seq = 7, length = 12)
-    private String billId;                //缴款通知书号
-    @DataField(seq = 8, length = 25)
+    @DataField(seq = 3, length = 25)
     private String fisActno;              //财政专户帐号
-    @DataField(seq = 9, length = 1)
+    @DataField(seq = 4, length = 10)
+    private String branchId;              //网点代码
+    @DataField(seq = 5, length = 5)
+    private String tlrId;                 //操作员代码
+    @DataField(seq = 6, length = 2)
+    private String voucherType;           //票据类型
+    @DataField(seq = 7, length = 6)
+    private String fisBatchSn;            //批次号码信息
+    @DataField(seq = 8, length = 12)
+    private String billId;                //缴款通知书号
+    // 20130214
+    @DataField(seq = 9, length = 12)
+    private BigDecimal txnAmt;
+    @DataField(seq = 10, length = 1)
     private String outModeFlag;           //输出模式标识
 
 
@@ -47,6 +52,14 @@ public class TpsTia3010 {
 
     public void setVoucherType(String voucherType) {
         this.voucherType = voucherType;
+    }
+
+    public BigDecimal getTxnAmt() {
+        return txnAmt;
+    }
+
+    public void setTxnAmt(BigDecimal txnAmt) {
+        this.txnAmt = txnAmt;
     }
 
     public String getFisBatchSn() {

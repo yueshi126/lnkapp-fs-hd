@@ -17,17 +17,17 @@ public class TpsTia3090 {
     private String branchId;             //网点代码
     @DataField(seq = 5, length = 5)
     private String tlrId;                //操作员代码
-    @DataField(seq = 6, length = 7)
-    private String instCode;                //单位代码
-    @DataField(seq = 7, length = 2)
-    private String billType;              //通知书类别 0:一般通知书；1：土地出让金类通知书；（出让金通知书参数启用，暂时没有）
-    @DataField(seq = 8, length = 6)
+//    @DataField(seq = 6, length = 7)
+//    private String instCode;                //单位代码
+    @DataField(seq = 6, length = 2)
+    private String billType;              //通知书类别
+    @DataField(seq = 7, length = 6)
     private String fisBatchSn;            //批次号码信息
-    @DataField(seq = 9, length = 12)
+    @DataField(seq = 8, length = 12)
     private String billId;                //缴款通知书号
-    @DataField(seq = 10, length = 12)
+    @DataField(seq = 9, length = 12)
     private BigDecimal payAmt;                 //总金额
-    @DataField(seq = 11, length = 1)
+    @DataField(seq = 10, length = 1)
     private String outModeFlag;           //输出模式标识
 
 
@@ -103,13 +103,13 @@ public class TpsTia3090 {
         this.tlrId = tlrId;
     }
 
-    public String getInstCode() {
+   /* public String getInstCode() {
         return instCode;
     }
 
     public void setInstCode(String instCode) {
         this.instCode = instCode;
-    }
+    }*/
 
     public BigDecimal getPayAmt() {
         return payAmt;
@@ -127,7 +127,7 @@ public class TpsTia3090 {
                 ", fisActno='" + fisActno + '\'' +
                 ", branchId='" + branchId + '\'' +
                 ", tlrId='" + tlrId + '\'' +
-                ", instCode='" + instCode + '\'' +
+//                ", instCode='" + instCode + '\'' +
                 ", billType='" + billType + '\'' +
                 ", fisBatchSn='" + fisBatchSn + '\'' +
                 ", billId='" + billId + '\'' +

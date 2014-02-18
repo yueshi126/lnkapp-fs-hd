@@ -58,7 +58,7 @@ public class T3010Processor extends AbstractTxnProcessor {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
                 logger.info("===此笔缴款单已缴款.");
                 return;
-            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
+            } else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "此笔缴款单状态错误", response);
                 logger.info("===此笔缴款单状态错误.");
                 return;
@@ -74,12 +74,14 @@ public class T3010Processor extends AbstractTxnProcessor {
             tpsTia.setFisCode(ProjectConfigManager.getInstance().getProperty("tps.fis.fiscode"));
             tpsTia.setTxnHdlCode("A");   //处理码 内容：A—表示请求收款、请求保存
             tpsTia.setFisActno(ProjectConfigManager.getInstance().getProperty("tps.fis.actno")); //财政专户账号
-            //tpsTia.setVoucherType("01");     //通知书类型
-            //tpsTia.setFisBatchSn("000001");   //批次号码信息
+            tpsTia.setVoucherType(cbsTia.getVoucherType());     //通知书类型
+            tpsTia.setFisBatchSn(cbsTia.getFisBatchSn());   //批次号码信息
+            tpsTia.setTxnAmt(cbsTia.getPayAmt());
             tpsTia.setOutModeFlag("O");     //输出模式标识
             tpsTia.setBranchId(request.getHeader("branchId"));
             tpsTia.setTlrId(request.getHeader("tellerId"));
 
+            logger.info("TPSTIA:" + tpsTia.toString());
             byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "3010");
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);
         } catch (SocketTimeoutException e) {
@@ -123,6 +125,7 @@ public class T3010Processor extends AbstractTxnProcessor {
         byte[] buf;
         try {
             String sendMsg = (String) dataFormat.toMessage(modelObjectsMap);
+            logger.info("TPS Request:" + sendMsg);
             buf = generateTpsRequestHeader(sendMsg).getBytes(TPS_ENCODING);
         } catch (Exception e) {
             throw new RuntimeException("第三方请求报文处理错误");

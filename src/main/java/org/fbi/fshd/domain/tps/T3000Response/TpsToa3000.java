@@ -25,7 +25,7 @@ public class TpsToa3000 {
 
     @DataField(seq = 8, length = 1)
     private String itemNum;
-    @DataField(seq = 9, length = 30)
+    @DataField(seq = 9, length = 62)
     @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T3000Response.TpsToa3000Item", totalNumberField = "itemNum")
     private List<TpsToa3000Item> items;
 

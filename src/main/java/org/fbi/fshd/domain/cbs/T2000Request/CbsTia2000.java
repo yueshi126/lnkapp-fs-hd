@@ -146,8 +146,8 @@ public class CbsTia2000 {
                 ", verifyNo='" + verifyNo + '\'' +
                 ", remark='" + remark + '\'' +
                 ", voucherType='" + voucherType + '\'' +
-                ", billType='" + billType + '\'' +
-                ", contractNo='" + contractNo + '\'' +
+//                ", billType='" + billType + '\'' +
+//                ", contractNo='" + contractNo + '\'' +
                 ", itemNum='" + itemNum + '\'' +
                 ", items=" + items +
                 '}';
