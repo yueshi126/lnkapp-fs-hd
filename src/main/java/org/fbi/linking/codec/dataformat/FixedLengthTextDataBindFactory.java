@@ -150,7 +150,7 @@ public class FixedLengthTextDataBindFactory extends DataBindAbstractFactory impl
         }
 
         if (offset != buf.length) {
-            throw new RuntimeException("报文各个域定义的长度之和与报文总长度不符。");
+            throw new RuntimeException("报文各个域定义的长度之和" + offset + "与报文总长度" + buf.length + "不符。");
         }
 
         //
@@ -254,19 +254,19 @@ public class FixedLengthTextDataBindFactory extends DataBindAbstractFactory impl
                         int totalNumber = Integer.parseInt((String) totalNumberField.get(model));
 
                         //if (totalNumber > 0) {
-                            int beginIdx = dataField.seq() - 1;
-                            int endIdx = beginIdx + totalNumber;
-                            if (endIdx > tokens.size()) {
-                                endIdx = tokens.size();
-                            }
-                            List<String> oneToManyFieldDataList = tokens.subList(beginIdx, endIdx);
+                        int beginIdx = dataField.seq() - 1;
+                        int endIdx = beginIdx + totalNumber;
+                        if (endIdx > tokens.size()) {
+                            endIdx = tokens.size();
+                        }
+                        List<String> oneToManyFieldDataList = tokens.subList(beginIdx, endIdx);
 
-                            if (!oneToManyModelMap.containsKey(cl.getName())) {
-                                oneToManyModelMap.put(cl.getName(), new ArrayList<Object>());
-                            }
+                        if (!oneToManyModelMap.containsKey(cl.getName())) {
+                            oneToManyModelMap.put(cl.getName(), new ArrayList<Object>());
+                        }
 
-                            generateModelMap(cl, null, oneToManyFieldDataList, oneToManyModelMap);
-                            field.set(model, oneToManyModelMap.get(cl.getName()));
+                        generateModelMap(cl, null, oneToManyFieldDataList, oneToManyModelMap);
+                        field.set(model, oneToManyModelMap.get(cl.getName()));
                         //}
                     } else {
                         throw new RuntimeException("OneToMany defined error.");
@@ -300,7 +300,8 @@ public class FixedLengthTextDataBindFactory extends DataBindAbstractFactory impl
         }
 
         if (offset != recordBuffer.length) {
-            throw new RuntimeException("OneToMany报文各个域定义的长度之和与报文总长度不符。");
+            throw new RuntimeException("OneToMany报文各个域定义的长度之和" + offset
+                    + "与报文总长度(" + recordBuffer.length + ")不符。");
         }
         return tokens;
     }

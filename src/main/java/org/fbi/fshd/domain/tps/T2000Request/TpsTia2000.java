@@ -29,8 +29,8 @@ public class TpsTia2000 {
 
     @DataField(seq = 10, length = 1)
     private String itemNum;
-    @DataField(seq = 11, length = 30)
-    @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T2000Response.TpsTia2000Item", totalNumberField = "itemNum")
+    @DataField(seq = 11, length = 32)
+    @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T2000Request.TpsTia2000Item", totalNumberField = "itemNum")
     private List<TpsTia2000Item> items;
 
     @DataField(seq = 12, length = 8)
@@ -45,14 +45,14 @@ public class TpsTia2000 {
         @DataField(seq = 16, length = 60)
         private String payerBank;               //缴款人开户银行
     */
-    @DataField(seq = 15, length = 250)
-    private String remark;                  //备注
-    @DataField(seq = 16, length = 2)
+    /*@DataField(seq = 15, length = 250)
+    private String remark;                  //备注*/
+    @DataField(seq = 15, length = 2)
     private String voucherType;             //票据类型
 //    @DataField(seq = 17, length = 1)
 //    private String billType;                //通知书类别
-    @DataField(seq = 17, length = 1)
-    private String outModeFlag;            //输出模式标识
+//    @DataField(seq = 16, length = 1)
+//    private String outModeFlag;            //输出模式标识
 
     public String getFisCode() {
         return fisCode;
@@ -166,13 +166,13 @@ public class TpsTia2000 {
         this.verifyNo = verifyNo;
     }
 
-    public String getRemark() {
+   /* public String getRemark() {
         return remark;
     }
 
     public void setRemark(String remark) {
         this.remark = remark;
-    }
+    }*/
 
     public String getVoucherType() {
         return voucherType;
@@ -190,13 +190,13 @@ public class TpsTia2000 {
         this.billType = billType;
     }*/
 
-    public String getOutModeFlag() {
+   /* public String getOutModeFlag() {
         return outModeFlag;
     }
 
     public void setOutModeFlag(String outModeFlag) {
         this.outModeFlag = outModeFlag;
-    }
+    }*/
 
     @Override
     public String toString() {
@@ -215,10 +215,10 @@ public class TpsTia2000 {
                 ", notifyDate='" + notifyDate + '\'' +
                 ", latestDate='" + latestDate + '\'' +
                 ", verifyNo='" + verifyNo + '\'' +
-                ", remark='" + remark + '\'' +
+//                ", remark='" + remark + '\'' +
                 ", voucherType='" + voucherType + '\'' +
 //                ", billType='" + billType + '\'' +
-                ", outModeFlag='" + outModeFlag + '\'' +
+//                ", outModeFlag='" + outModeFlag + '\'' +
                 '}';
     }
 }

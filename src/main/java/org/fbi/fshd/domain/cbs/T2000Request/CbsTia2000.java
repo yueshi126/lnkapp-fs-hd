@@ -36,7 +36,7 @@ public class CbsTia2000 {
     private String itemNum;
 
     @DataField(seq = 12)
-    @OneToMany(mappedTo = "org.fbi.fshd.domain.cbs.T2000Response.CbsTia2000Item", totalNumberField = "itemNum")
+    @OneToMany(mappedTo = "org.fbi.fshd.domain.cbs.T2000Request.CbsTia2000Item", totalNumberField = "itemNum")
     private List<CbsTia2000Item> items;
 
     public String getBillId() {

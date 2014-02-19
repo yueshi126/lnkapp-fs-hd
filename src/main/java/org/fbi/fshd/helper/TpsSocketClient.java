@@ -1,5 +1,8 @@
 package org.fbi.fshd.helper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,6 +20,8 @@ public class TpsSocketClient {
     private String ip;
     private int port;
     private int timeout = 30000; //默认超时时间：ms  连接超时与读超时统一
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
 
     public TpsSocketClient(String ip, int port) {
         this.ip = ip;
@@ -24,7 +29,6 @@ public class TpsSocketClient {
     }
 
     /**
-     *
      * @param sendbuf:不含3字节长度字段 和 1字节的加密标识
      * @return 响应报文不含3字节的长度字段
      * @throws Exception 其中：SocketTimeoutException为超时异常
@@ -52,6 +56,7 @@ public class TpsSocketClient {
                 throw new RuntimeException("读取报文头长度部分错误...");
             }
             int msgLen = Integer.parseInt(new String(recvbuf).trim());
+            logger.info("报文头指示长度:" + msgLen);
             recvbuf = new byte[msgLen - 3];
 
             //TODO与市财政的网络连接不稳定 需延时一定时间
@@ -59,7 +64,7 @@ public class TpsSocketClient {
 
             readNum = is.read(recvbuf);   //阻塞读
             if (readNum != msgLen - 3) {
-                throw new RuntimeException("报文长度错误,报文头指示长度:[" + msgLen + "], 实际获取长度:[" + readNum +"]");
+                throw new RuntimeException("报文长度错误,报文头指示长度:[" + msgLen + "], 实际获取长度:[" + readNum + "]");
             }
         } finally {
             try {
