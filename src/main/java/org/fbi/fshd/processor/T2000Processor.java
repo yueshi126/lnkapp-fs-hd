@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -60,7 +61,7 @@ public class T2000Processor extends AbstractTxnProcessor {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
                 logger.info("===此笔缴款单已缴款.");
                 return;
-            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
+            } else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "此笔缴款单状态错误", response);
                 logger.info("===此笔缴款单状态错误.");
                 return;
@@ -80,7 +81,7 @@ public class T2000Processor extends AbstractTxnProcessor {
             tpsTia.setBranchId(request.getHeader("branchId"));
             tpsTia.setTlrId(request.getHeader("tellerId"));
 
-            List<TpsTia2000Item>  tpsTiaItems  = new ArrayList<>();
+            List<TpsTia2000Item> tpsTiaItems = new ArrayList<>();
             for (CbsTia2000Item cbsTiaItem : cbsTia.getItems()) {
                 TpsTia2000Item tpsTiaItem = new TpsTia2000Item();
                 FbiBeanUtils.copyProperties(cbsTiaItem, tpsTiaItem);
@@ -89,7 +90,10 @@ public class T2000Processor extends AbstractTxnProcessor {
             tpsTia.setItems(tpsTiaItems);
 
             byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "2000");
+            recvTpsBuf[43] = String.valueOf((recvTpsBuf.length - 59) / 32).getBytes()[0];
+            logger.info("替换后报文：" + new String(recvTpsBuf));
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);
+            logger.info(tpsToa.toString());
         } catch (SocketTimeoutException e) {
             logger.error("与第三方服务器通讯处理超时.", e);
             marshalAbnormalCbsResponse(TxnRtnCode.MSG_RECV_TIMEOUT, "与第三方服务器通讯处理超时", response);
