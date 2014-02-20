@@ -299,12 +299,12 @@ public class T2000Processor extends AbstractTxnProcessor {
             List<CbsTia2000Item> cbsTia2000Items = cbsTia.getItems();
             int i = 0;
             for (TpsToa2000Item toaItem : tpsToa.getItems()) {
-                i++;
                 FsHdPaymentItem paymentItem = new FsHdPaymentItem();
                 FbiBeanUtils.copyProperties(toaItem, paymentItem);
                 FbiBeanUtils.copyProperties(cbsTia2000Items.get(i), paymentItem);
                 paymentItem.setMainPkid(paymentInfo.getPkid());
                 itemMapper.insert(paymentItem);
+                i++;
             }
             session.commit();
         } catch (Exception e) {
