@@ -83,34 +83,6 @@ public class T6000Processor extends AbstractTxnProcessor {
         return tia;
     }
 
-    //根据本地数据库中的已保存信息生成CBS响应报文
-    private String generateCbsRespMsgByLocalDbInfo(FsHdPaymentInfo paymentInfo, List<FsHdPaymentItem> paymentItems) {
-        CbsToa6000 cbsToa = new CbsToa6000();
-        FbiBeanUtils.copyProperties(paymentInfo, cbsToa);
-
-        List<CbsToa6000Item> cbsToaItems = new ArrayList<>();
-        for (FsHdPaymentItem paymentItem : paymentItems) {
-            CbsToa6000Item cbsToaItem = new CbsToa6000Item();
-            FbiBeanUtils.copyProperties(paymentItem, cbsToaItem);
-            cbsToaItems.add(cbsToaItem);
-        }
-        cbsToa.setItems(cbsToaItems);
-        cbsToa.setItemNum("" + cbsToaItems.size());
-
-        String cbsRespMsg = "";
-        Map<String, Object> modelObjectsMap = new HashMap<String, Object>();
-        modelObjectsMap.put(cbsToa.getClass().getName(), cbsToa);
-        SeperatedTextDataFormat cbsDataFormat = new SeperatedTextDataFormat(cbsToa.getClass().getPackage().getName());
-        try {
-            cbsRespMsg = (String) cbsDataFormat.toMessage(modelObjectsMap);
-        } catch (Exception e) {
-            throw new RuntimeException("特色平台报文转换失败.", e);
-        }
-        return cbsRespMsg;
-    }
-
-
-
     //根据第三方服务器响应报文生成特色平台响应报文
     private String marshalCbsResponseMsg(CbsToa6000 cbsToa) {
         String cbsRespMsg = "";
@@ -150,20 +122,4 @@ public class T6000Processor extends AbstractTxnProcessor {
         }
     }
 
-
-    private void processTxn(FsHdPaymentInfo paymentInfo, Stdp10ProcessorRequest request) {
-        SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
-        SqlSession session = sqlSessionFactory.openSession();
-        try {
-            paymentInfo.setFbChkFlag("1");
-            FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
-            infoMapper.updateByPrimaryKey(paymentInfo);
-            session.commit();
-        } catch (Exception e) {
-            session.rollback();
-            throw new RuntimeException("业务逻辑处理失败。", e);
-        } finally {
-            session.close();
-        }
-    }
 }

@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -271,11 +270,14 @@ public class T2000Processor extends AbstractTxnProcessor {
             infoMapper.insert(paymentInfo);
 
             FsHdPaymentItemMapper itemMapper = session.getMapper(FsHdPaymentItemMapper.class);
+
+            List<CbsTia2000Item> cbsTia2000Items = cbsTia.getItems();
             int i = 0;
             for (TpsToa2000Item toaItem : tpsToa.getItems()) {
                 i++;
                 FsHdPaymentItem paymentItem = new FsHdPaymentItem();
                 FbiBeanUtils.copyProperties(toaItem, paymentItem);
+                FbiBeanUtils.copyProperties(cbsTia2000Items.get(i), paymentItem);
                 paymentItem.setMainPkid(paymentInfo.getPkid());
                 itemMapper.insert(paymentItem);
             }
