@@ -48,7 +48,7 @@ public class T2090Processor extends AbstractTxnProcessor {
         }
 
         //检查本地数据库信息
-        FsHdPaymentInfo paymentInfo_db = selectPayoffPaymentInfoFromDB(cbsTia.getFisBizId());
+        FsHdPaymentInfo paymentInfo_db = selectPayoffPaymentInfoFromDB(cbsTia.getBillId());
         if (paymentInfo_db == null) {
             marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "不存在已缴款的记录.", response);
             return;
@@ -130,15 +130,15 @@ public class T2090Processor extends AbstractTxnProcessor {
 
 
     //=======数据库处理=================================================
-    //查找已缴款未撤销的缴款单记录
-    private FsHdPaymentInfo selectPayoffPaymentInfoFromDB(String fisBizId) {
+    //查找已缴款未撤销的缴款单记录 (根据缴款书号)
+    private FsHdPaymentInfo selectPayoffPaymentInfoFromDB(String billId) {
         SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
         FsHdPaymentInfoMapper mapper;
         try (SqlSession session = sqlSessionFactory.openSession()) {
             mapper = session.getMapper(FsHdPaymentInfoMapper.class);
             FsHdPaymentInfoExample example = new FsHdPaymentInfoExample();
             example.createCriteria()
-                    .andFisBizIdEqualTo(fisBizId)
+                    .andBillIdEqualTo(billId)
                     .andLnkBillStatusEqualTo(BillStatus.PAYOFF.getCode());
             List<FsHdPaymentInfo> infos = mapper.selectByExample(example);
             if (infos.size() == 0) {
