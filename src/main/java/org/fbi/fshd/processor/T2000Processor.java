@@ -60,7 +60,10 @@ public class T2000Processor extends AbstractTxnProcessor {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
                 logger.info("===此笔缴款单已缴款.");
                 return;
-            } else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
+            } else if (billStatus.equals(BillStatus.INIT.getCode())) {  //初始状态
+                //删除已存在的记录（初始状态）
+                deletePaymentInfoFromDB(paymentInfo_db.getPkid());
+            } else {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "此笔缴款单状态错误", response);
                 logger.info("===此笔缴款单状态错误.");
                 return;
@@ -223,6 +226,28 @@ public class T2000Processor extends AbstractTxnProcessor {
                 throw new RuntimeException("记录状态错误.");
             }
             return infos.get(0);
+        }
+    }
+
+    //删除已存在的记录（初始化状态）
+    private void deletePaymentInfoFromDB(String pkid) {
+        SqlSessionFactory sqlSessionFactory = MybatisFactory.ORACLE.getInstance();
+        SqlSession session = sqlSessionFactory.openSession();
+        try {
+            FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
+            infoMapper.deleteByPrimaryKey(pkid);
+
+            FsHdPaymentItemExample example = new FsHdPaymentItemExample();
+            example.createCriteria().andMainPkidEqualTo(pkid);
+            FsHdPaymentItemMapper itemMapper = session.getMapper(FsHdPaymentItemMapper.class);
+            itemMapper.deleteByExample(example);
+
+            session.commit();
+        } catch (Exception e) {
+            session.rollback();
+            throw new RuntimeException("业务逻辑处理失败。", e);
+        } finally {
+            session.close();
         }
     }
 
