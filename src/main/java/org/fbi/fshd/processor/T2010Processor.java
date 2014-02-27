@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -57,12 +58,26 @@ public class T2010Processor extends AbstractTxnProcessor {
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_PAY_REPEATED, null, response);
                 logger.info("===此笔缴款单已缴款.");
                 return;
-            }else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
+            } else if (!billStatus.equals(BillStatus.INIT.getCode())) {  //非初始状态
                 marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "此笔缴款单状态错误", response);
                 logger.info("===此笔缴款单状态错误.");
                 return;
             }
+        } else {
+            marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "请先做查询交易.", response);
+            return;
         }
+
+        //检查明细金额是否修改过
+        BigDecimal totalAmt = new BigDecimal("0.00");
+        for (CbsTia2010Item cbsTia2010Item : cbsTia.getItems()) {
+            totalAmt = totalAmt.add(cbsTia2010Item.getTxnAmt());
+        }
+        if (paymentInfo_db.getPayAmt().compareTo(totalAmt) != 0) {
+            marshalAbnormalCbsResponse(TxnRtnCode.TXN_EXECUTE_FAILED, "明细项目金额与汇总金额不符.", response);
+            return;
+        }
+
 
         //第三方通讯处理
         TpsTia2010 tpsTia = new TpsTia2010();

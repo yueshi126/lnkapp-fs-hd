@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -291,14 +292,15 @@ public class T2000Processor extends AbstractTxnProcessor {
             paymentInfo.setLnkBillStatus("0"); //初始化
             paymentInfo.setManualFlag("1"); //手工票
 
-            FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
-            infoMapper.insert(paymentInfo);
 
             FsHdPaymentItemMapper itemMapper = session.getMapper(FsHdPaymentItemMapper.class);
-
             List<CbsTia2000Item> cbsTia2000Items = cbsTia.getItems();
             int i = 0;
+            BigDecimal totalAmt = new BigDecimal("0.00");
             for (TpsToa2000Item toaItem : tpsToa.getItems()) {
+                //汇总明细金额
+                totalAmt = totalAmt.add(cbsTia2000Items.get(i).getTxnAmt());
+
                 FsHdPaymentItem paymentItem = new FsHdPaymentItem();
                 FbiBeanUtils.copyProperties(toaItem, paymentItem);
                 FbiBeanUtils.copyProperties(cbsTia2000Items.get(i), paymentItem);
@@ -306,6 +308,11 @@ public class T2000Processor extends AbstractTxnProcessor {
                 itemMapper.insert(paymentItem);
                 i++;
             }
+
+            paymentInfo.setPayAmt(totalAmt);
+            FsHdPaymentInfoMapper infoMapper = session.getMapper(FsHdPaymentInfoMapper.class);
+            infoMapper.insert(paymentInfo);
+
             session.commit();
         } catch (Exception e) {
             session.rollback();
