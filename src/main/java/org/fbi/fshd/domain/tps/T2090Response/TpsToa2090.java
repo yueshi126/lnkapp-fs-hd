@@ -11,7 +11,7 @@ public class TpsToa2090 {
     private String txnHdlCode;            //交易处理码
     @DataField(seq = 3, length = 1)
     private String rtnCode;               //验证码
-    @DataField(seq = 6, length = 10)
+    @DataField(seq = 4, length = 10)
     private String fisBizId;             //财政业务ID号    财政流水号?
 
 

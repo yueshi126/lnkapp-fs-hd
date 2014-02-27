@@ -94,7 +94,7 @@ public class T2010Processor extends AbstractTxnProcessor {
                 FbiBeanUtils.copyProperties(cbsTiaItem, tpsTiaItem);
                 tpsTiaItems.add(tpsTiaItem);
             }
-            tpsTia.setItems(tpsTiaItems);
+//            tpsTia.setItems(tpsTiaItems);
 
             byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "2010");
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);

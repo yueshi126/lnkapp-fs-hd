@@ -106,7 +106,8 @@ public class T6000Processor extends AbstractTxnProcessor {
             mapper = session.getMapper(FsHdPaymentInfoMapper.class);
             FsHdPaymentInfoExample example = new FsHdPaymentInfoExample();
             example.createCriteria()
-                    .andNotifyDateBetween(startDate, endDate)
+//                    .andNotifyDateBetween(startDate, endDate)
+                    .andBankindateBetween(startDate, endDate)
                     .andLnkBillStatusNotEqualTo(BillStatus.CANCELED.getCode());
             return mapper.selectByExample(example);
         }

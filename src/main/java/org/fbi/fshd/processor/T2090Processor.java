@@ -67,6 +67,7 @@ public class T2090Processor extends AbstractTxnProcessor {
             tpsTia.setBranchId(request.getHeader("branchId"));
             tpsTia.setTlrId(request.getHeader("tellerId"));
             tpsTia.setInstCode(paymentInfo_db.getInstCode());    //µ¥Î»´úÂë
+            tpsTia.setFisBizId(paymentInfo_db.getFisBizId());
 
             byte[] recvTpsBuf = processThirdPartyServer(marshalTpsRequestMsg(tpsTia), "2090");
             tpsToa = unmarshalTpsResponseMsg(recvTpsBuf);

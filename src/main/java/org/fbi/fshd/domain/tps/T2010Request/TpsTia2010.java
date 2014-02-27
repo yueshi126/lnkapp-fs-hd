@@ -19,11 +19,11 @@ public class TpsTia2010 {
     private String fisBizId;             //财政业务ID号
 
     @DataField(seq = 4, length = 1)
-    private String itemNum;
+    private String itemNum = "0";
 
-    @DataField(seq = 5, length = 22)
+   /* @DataField(seq = 5, length = 22)
     @OneToMany(mappedTo = "org.fbi.fshd.domain.tps.T2010Request.TpsTia2010Item", totalNumberField = "itemNum")
-    private List<TpsTia2010Item> items;
+    private List<TpsTia2010Item> items;*/
 
     public String getFisCode() {
         return fisCode;
@@ -57,13 +57,13 @@ public class TpsTia2010 {
         this.itemNum = itemNum;
     }
 
-    public List<TpsTia2010Item> getItems() {
+   /* public List<TpsTia2010Item> getItems() {
         return items;
     }
 
     public void setItems(List<TpsTia2010Item> items) {
         this.items = items;
-    }
+    }*/
 
     @Override
     public String toString() {
@@ -72,7 +72,7 @@ public class TpsTia2010 {
                 ", txnHdlCode='" + txnHdlCode + '\'' +
                 ", fisBizId='" + fisBizId + '\'' +
                 ", itemNum='" + itemNum + '\'' +
-                ", items=" + items +
+//                ", items=" + items +
                 '}';
     }
 }
